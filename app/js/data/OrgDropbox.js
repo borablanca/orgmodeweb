@@ -10,7 +10,7 @@
     let token = ORG.Store.store(tokenPrefix);
     if (token) return new Dropbox.Dropbox({accessToken: token});
     location.href = new Dropbox.Dropbox({clientId: "h3xyb8gqqxvounb"})
-      .getAuthenticationUrl("https://orgmodeweb.firebaseapp.com/");
+      .getAuthenticationUrl("https://orgmodeweb.com/");
     return null;
   };
 

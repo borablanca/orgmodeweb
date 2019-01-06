@@ -41,7 +41,7 @@
   };
 
   $.markup = (str = "") => {
-    let linkRe = /\[\[([^\]]*)\]\[([^\]]*)\]\]/;
+    let linkRe = ORG.Parser.linkRE;
     let match;
     while (match = str.match(linkRe)) { // links
       str = str.replace(match[0], `<a class="link" href="${match[1]}">` + match[2] + "</a>");

@@ -9,7 +9,6 @@
     ],
     "globals": {
         "$": true,
-        "DOM": true,
         "ORG": true,
         "Dropbox": true,
         "QUnit": true

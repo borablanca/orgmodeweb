@@ -174,5 +174,6 @@
         .join("|") + ")?\\s*(?:\\[#([a-zA-Z])\\])?\\s*(.*?)[ \\t]*(:[^\\s]+:)?\\s*(?:\\r\\n?)?$"),
 
     archiveRE: /:ARCHIVE:/,
+    linkRE: orgLinkRE,
   };
 })();

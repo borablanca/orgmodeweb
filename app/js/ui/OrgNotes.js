@@ -215,15 +215,6 @@
     return init(this.removeData().off().empty().append(
       ORG.Settings.getStyles(curSettings),
       $(document.createElement("div")).addClass(fileSyncClass).orgNavbar({
-        // edit: () => {
-        //   let $selected = this.find(".select");
-        //   let data = $selected.data("node");
-        //   return $(itemEditTmpl(data, settings))
-        //     .data("node", data)
-        //     .replaceAll($selected.removeData())
-        //     .find("input").select().end()
-        //     .find("textarea").trigger("keydown");
-        // },
         add: () => {
           let $prev = this.find(".select");
           if (!$prev[0]) {
