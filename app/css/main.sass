@@ -1,0 +1,407 @@
+$bgColor: #222
+$buttonBgColor: #444
+$buttonHoverBgColor: #555
+$buttonActiveBgColor: #666
+$iconHoverBgColor: #aaa
+$dimColor: #777
+$cursorColor: #f00
+$editColor: #0f0
+$linkColor: #f5f
+$firstLevelColor: #0ff
+$secondLevelColor: #fa0
+$thirdLevelColor: #88f
+$textColor: #eee
+  
+*,
+*:before,
+*:after
+  box-sizing: border-box
+  margin: 0
+  padding: 0
+body,
+html
+  background: $bgColor
+  color: $textColor
+  font-family: monospace
+  font-size: 100%
+  height: 100%
+.orgloading 
+  animation-duration: 3s
+  animation-fill-mode: forwards
+  animation-iteration-count: 1
+  animation-name: loading
+  animation-timing-function: ease-out
+  background: #fff
+  height: 4px
+  left: 50%
+  position: fixed
+  top: 0
+  width: 1%
+  z-index: 9
+@keyframes loading
+  0% 
+    transform: scaleX(0)
+  100% 
+    transform: scaleX(100)
+
+.orgicon
+  flex-shrink: 0
+  font-style: normal
+  font-weight: bold
+  margin: 0 5px
+.orgpage
+  position: relative
+  width: 100%
+.orgnavbar
+  align-items: center
+  background: $bgColor
+  border-bottom: 3px solid $buttonBgColor
+  display: flex
+  height: 60px
+  padding: 10px 
+  position: fixed
+  z-index: 7
+  width: 100%
+  span // orgnavbar title
+    color: $textColor
+    font-size: 130%
+    font-weight: bold
+    flex: 1 1 auto
+    padding: 0 5px
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+  &+*
+    padding-top: 60px
+.orgmenu
+  display: grid
+  grid-gap: 3px
+  grid-template-columns: 1fr 1fr 1fr
+  padding-top: 63px
+  a, button // menu items
+    align-items: center
+    background: $buttonBgColor
+    color: $textColor
+    cursor: pointer
+    display: flex
+    font-size: 130%
+    height: 50px
+    text-align: center
+    width: 100% // necessary for ms-edge
+    span
+      width: 100%
+.orgcontext
+  background: $bgColor
+  display: flex
+  flex-direction: column
+  height: 100%
+  padding: 70px 10px 10px
+  position: fixed
+  top: 0
+  width: 100%
+  z-index: 6
+  a,button
+    background: #444
+    border-radius: 3px
+    color: $textColor
+    font-size: 130%
+    line-height: 40px
+    margin: 3px 0
+    overflow: hidden
+    outline: none
+    padding: 0 5px
+    text-align: center
+    text-overflow: ellipsis
+    white-space: nowrap
+    &:last-child
+      margin-top: 15px
+    b
+      margin-right: 10px
+      text-align: center
+      min-width: 50px
+.orgnotify
+  align-items: center
+  background: $bgColor
+  border-top: 4px solid #eee
+  bottom: 0
+  color: #eee
+  display: flex
+  flex-wrap: wrap
+  min-height: 50px
+  padding: 5px
+  position: fixed
+  width: 100%
+  z-index: 8
+  span
+    flex: 0 1 auto
+    margin-right: 5px
+  input[type=text]
+    border-bottom: 1px solid $textColor
+    color: $textColor
+    flex: 1 1 auto
+  div
+    width: 100%
+    button
+      float: right
+      font-size: 150%
+      padding: 10px 15px
+.orgview
+  li
+    border: 1px solid $bgColor
+    border-left: 4px solid $bgColor
+    color: $firstLevelColor
+    line-height: 30px
+    padding: 0 2px 0 5px
+    overflow: auto
+    .body
+      clear: both
+      line-height: 1.2
+    &:before
+      content: "* "
+      float: left
+      line-height: 30px
+      margin-right: -15px
+    &:active
+      background: $buttonActiveBgColor
+    &.edit
+      overflow: auto
+  input,
+  textarea
+    width: 100%
+  input
+    color: inherit
+    font-weight: bold
+    margin-top: -5px
+    padding-left: 15px
+  textarea
+    color: #fff
+    padding: 1px 0 0 15px
+.orgsettings
+  li
+    font-weight: bold
+    &.selected
+      padding-left: 5px
+    b,
+    pre
+      display: block
+      padding-left: 15px
+    pre
+      color: $secondLevelColor
+      font-weight: normal
+    textarea
+      color: $secondLevelColor
+.orgdropbox, .orgfiles
+  li
+    align-items: center
+    background: $buttonBgColor
+    border-left: 4px solid $buttonBgColor
+    display: flex
+    height: 50px
+    margin-top: 3px
+    padding: 0 10px
+    a, button
+      align-items: center
+      color: $textColor
+      display: flex
+      flex: 1 1 auto
+      height: 100%
+      width: 100%
+      &:focus
+        outline: none
+      span
+        font-size: 130%
+        overflow: hidden
+        text-overflow: ellipsis
+        white-space: nowrap
+    input
+      color: $textColor
+      font-size: 130%
+      width: 100%
+
+.orgsearchslot
+  button
+    color: $secondLevelColor
+    float: left
+    line-height: 30px
+    padding-bottom: 1px
+  pre
+    border-left: 4px solid $bgColor
+    line-height: 28px
+    padding: 2px 0 1px
+    a
+      color: $secondLevelColor
+      .pri,
+      .title
+        color: $firstLevelColor
+    &:active
+      background: $buttonActiveBgColor
+  .header
+    background: $buttonBgColor
+    border-color: $buttonBgColor
+    color: $firstLevelColor
+    margin-top: 3px
+    padding-left: 5px
+    .orgicon
+      float: right
+    
+.orgnotes
+  &>li>div,
+  .title
+    display: block
+    margin-left: 15px
+  .ts // timestamp
+    text-decoration: underline
+  .cls,
+  .dl,
+  .sch,
+  .collapsible
+    color: $dimColor
+  .txt
+    color: $textColor
+    min-height: 10px
+  .props
+    span+span
+      color: $textColor
+  .lvl-1
+    color: $firstLevelColor
+  .lvl-2
+    color: $secondLevelColor
+  .lvl-0
+    color: $thirdLevelColor
+.notesettings pre
+  color: $dimColor
+  display: block
+  padding: 2px 8px 0
+
+.orgnotice
+  padding: 5px 0
+  text-align: center
+
+/////////////////
+// Miscellaneous
+
+a
+  -webkit-touch-callout: none !important
+  color: $linkColor
+  text-decoration: none
+  &.link
+    color: $linkColor !important
+button
+  border: none
+  background: none
+  color: inherit
+  font-family: monospace
+  outline: none
+input[type=number],
+input[type=text],
+textarea
+  background: transparent
+  border: none
+  font-family: monospace
+  font-size: 100%
+  outline: none
+ol,
+ul
+  list-style: none
+pre
+  white-space: pre-wrap
+.b
+  font-weight: bold
+.collapsed
+  &>*:first-child:after
+    content: "..."
+  &>*:first-child~*
+    display: none !important
+.conflict, .conflict span
+  color: red
+.edit:not(svg)
+  border: 1px solid $editColor
+  border-left: 4px solid $editColor !important
+  .orgicon
+    float: right
+.insync,
+.insync
+  span
+    color: yellow
+    font-weight: bold
+    &:after
+      content: "..."
+.select
+  border-left: 4px solid $cursorColor !important
+.pri
+  font-style: italic
+  margin-right: 5px
+.sync, .sync span
+  color: #2f5 
+.tags
+  float: right
+  font-size: 85%
+.todo
+  font-weight: bold
+  margin-right: 5px
+.archive
+  .title,
+  .todo
+    color: $dimColor
+
+////////////////
+// Desktop Size
+@media (min-width: 1025px)
+  .orgicon
+    cursor: pointer
+    &:hover
+      path
+        fill: $iconHoverBgColor
+  .orgfiles, .orgdropbox
+    li:hover
+      background: $buttonHoverBgColor
+  .orgcontext
+    a,
+    button
+      align-items: center
+      display: flex
+  .orgview
+    .title
+      cursor: pointer
+    li
+      line-height: 20px
+      &:before
+        line-height: 25px
+    textarea
+      padding-top: 2px
+  .collapsible>div:first-child
+    cursor: pointer
+  .orgsearchslot
+    button
+      line-height: 21px
+    pre
+      line-height: 20px
+      padding: 1px 0
+    pre.header:hover
+      background: $buttonHoverBgColor
+      cursor: pointer
+  .orgmenu,
+  .orgcontext,
+  .orgnotify
+    a,
+    button
+      &:hover
+        background: $buttonHoverBgColor
+  a,
+  button
+    cursor: pointer
+
+@media print 
+  a 
+    color:#000000
+  a[href^="http://"]:after
+    content: " (" attr(href) ") "
+  body
+    background: #fff
+    color: #000
+  .orgicon
+    &.back,
+    &.sync
+      display: none
+
+@import 'lib/toggle-switch'

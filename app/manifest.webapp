@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "name": "ORG",
+  "launch_path": "/index.html",
+  "description": "Web platform to view, search and edit Org-mode files",
+  "icons": {
+    "128": "/img/touch/icon-128x128.png"
+  },
+  "developer": {
+    "name": "Bora Celikkale",
+    "url": "https://twitter.com/borablanca"
+  },
+  "installs_allowed_from": [
+    "*"
+  ],
+  "default_locale": "en",
+  "permissions": {
+  },
+  "locales": {
+    "en": {
+      "name": "Org",
+      "description": "Web platform to view, search and edit Org-mode files"
+    }
+  }
+}

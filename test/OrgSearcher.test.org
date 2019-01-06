@@ -1,0 +1,18 @@
+* scheduled
+SCHEDULED: <2018-04-15>
+* repeating scheduled (schedule can have leading ':')
+:SCHEDULED: <2018-04-15 +1d>
+* range schedule
+SCHEDULED: <2018-04-15>--<2018-04-17>
+* delayed schedule
+SCHEDULED: <2018-04-15 -2d>
+* deadline
+DEADLINE: <2018-04-15>
+* timestamp
+<2018-04-15>
+* spelling mistakes
+SCHEDULED <2018-04-15>
+* spelling mistakes
+SCHEDULED: <2018-04-15
+* spelling mistakes
+SCHEDULED: <2018-0-15>
