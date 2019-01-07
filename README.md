@@ -22,11 +22,15 @@ Haven't tested on Safari but since it supports service-workers, should work fine
 - **Agenda View :** view agenda similarly in org-mode
 - **Match Search :** match tags and properties as described in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html) (no regexp or backward compatibility), some examples:
 
-```bash
-    +tag1-tag2
-    TODO=DONE|tag3
-    SCHEDULED="<today>"
-```
+      +tag1-tag2 : show items tagged with *tag1* but not having *tag2*
+
+      TODO=NEXT|tag3 : show items with NEXT todo state or items tagged with *tag3*
+  
+      SCHEDULED="\<today>" : show items scheduled for today
+
+      DEADLINE+PRIORITY=A : show items having a deadline and priority A
+
+      STYLE=habit : list habits
 
 - **Keyword Search**
 - **Custom TODO keywords :** can set custom TODO keywords and styles in settings
@@ -55,27 +59,31 @@ Haven't tested on Safari but since it supports service-workers, should work fine
   - **M-s :** goto settings (on file menu)
 - **Custom Agenda Views :** custom agendas similarly in org mode
 
-      As an example to create a 3-day agenda with projects listing and a keyword search:
-      1. Create a new setting in settings
-      2. Set setting name: custom-agenda-b (last letter will be the shortcut key)
-      3. Set value as below
+  As an example to create a 3-day agenda with projects listing (with *prj* tag) and a keyword search section:
+  1. Create a new setting in settings
+  2. Set setting name: custom-agenda-b (last letter will be the shortcut key)
+  3. Set value as below
 
-  ```bash
-    --type agenda --agenda-span 3 --header "My Agenda"
-    --type tags --filter +prj-DONE --header "My Projects"
-    --type search --text "keyword"
-  ```
+      ```bash
+        --type agenda --agenda-span 3 --header "My Agenda"
+        --type tags --filter +prj-DONE --header "My Projects"
+        --type search --text "keyword"
+      ```
 
-      4. Here each line corresponds to a search section in the custom agenda. There are 3 types of sections: **agenda**, **tags**, **search**. Parameters can be:
+  4. Here each line corresponds to a search section in the custom agenda. There are 3 types of sections: *agenda*, *tags*, *search*. Parameters can be:
 
-        - **--agenda-span :** sets how many days the agenda will show starting from today
-        - **--filter :** sets filter on results as TAG|TODO|PROP match string similarly in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html)
-        - **--header :** the text will be shown on the menu or section header
-        - **--text :** search keyword only for search type
+      **--agenda-span :** sets how many days the agenda will show starting from today
+
+      **--filter :** sets filter on results as TAG|TODO|PROP match string similarly in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html)
+
+      **--header :** the text will be shown on the menu or section header
+
+      **--text :** sets the search keyword only for search type
 
 ## Limitations
 
-- LocalStorage limit of browsers are generally 5MB (some are 10MB). Because org files are stored on LocalStorage, it seems to limit the size, but haven't tested it yet.
+- LocalStorage limit of browsers are generally 5MB (some are 10MB). Because org files are stored on LocalStorage, it seems to limit the size, but haven't tested with greater than 5MB org files.
+
 - When saving the org file, OrgModeWeb tries to keep the file as similar as possible to the original, however minor differences may occur such as number of empty lines, but the information will be same.
 
 ## Installation
