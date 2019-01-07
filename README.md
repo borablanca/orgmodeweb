@@ -22,11 +22,11 @@ Haven't tested on Safari but since it supports service-workers, should work fine
 - **Agenda View :** view agenda similarly in org-mode
 - **Match Search :** match tags and properties as described in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html) (no regexp or backward compatibility), some examples:
 
-      +tag1-tag2 : show items tagged with *tag1* but not having *tag2*
+      +tag1-tag2 : show items tagged with "tag1" but not having "tag2"
 
-      TODO=NEXT|tag3 : show items with NEXT todo state or items tagged with *tag3*
+      TODO=NEXT|tag3 : show items with NEXT todo state or items tagged with "tag3"
   
-      SCHEDULED="\<today>" : show items scheduled for today
+      SCHEDULED="<today>" : show items scheduled for today
 
       DEADLINE+PRIORITY=A : show items having a deadline and priority A
 
