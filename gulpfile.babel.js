@@ -102,9 +102,9 @@ gulp.task("scripts", () =>
     "./app/js/ui/OrgSettings.js",
     "./app/js/ui/OrgDropbox.js",
     "./app/js/ui/OrgSearch.js",
+    "./app/js/data/OrgDropbox.js",
     "./app/js/ui/OrgNotes.js",
     "./app/js/data/OrgRouter.js",
-    "./app/js/data/OrgDropbox.js",
   ])
     .pipe($.newer(".tmp/js"))
     .pipe($.sourcemaps.init())

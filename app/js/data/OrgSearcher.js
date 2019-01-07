@@ -285,7 +285,7 @@
       node: node,
     };
     if (curFits[ITEM_TYPE.DL]) {
-      slotNodes[slotNodes.length] = Object.assign(curObj, {
+      slotNodes[slotNodes.length] = Object.assign({}, curObj, {
         type: ITEM_TYPE.DL,
         hs: node.dl.hs,
         he: node.dl.he,
@@ -293,7 +293,7 @@
       });
     }
     if (curFits[ITEM_TYPE.SCH]) {
-      slotNodes[slotNodes.length] = Object.assign(curObj, {
+      slotNodes[slotNodes.length] = Object.assign({}, curObj, {
         type: ITEM_TYPE.SCH,
         hs: node.sch.hs,
         he: node.sch.he,
@@ -318,7 +318,7 @@
       }
     }
     if (curFits[ITEM_TYPE.TEXT]) {
-      slotNodes[slotNodes.length] = Object.assign(curObj, {
+      slotNodes[slotNodes.length] = Object.assign({}, curObj, {
         type: ITEM_TYPE.TEXT,
       });
     }
@@ -327,7 +327,7 @@
       curStamps = curFits[ITEM_TYPE.ISTAMP];
       if (curStamps && (ncurStamps = curStamps.length) > 0) {
         while (ncurStamps--) {
-          slotNodes[slotNodes.length] = Object.assign(curObj, {
+          slotNodes[slotNodes.length] = Object.assign({}, curObj, {
             type: ITEM_TYPE.ISTAMP,
             hs: curStamps[ncurStamps].hs,
           });
@@ -335,7 +335,7 @@
       }
     }
     if (curFits[ITEM_TYPE.TAG]) {
-      slotNodes[slotNodes.length] = Object.assign(curObj, {
+      slotNodes[slotNodes.length] = Object.assign({}, curObj, {
         type: ITEM_TYPE.TAG,
       });
     }

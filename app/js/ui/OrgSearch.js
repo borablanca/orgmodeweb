@@ -105,7 +105,6 @@
         else if ($allA.length > 1) {
           $container.orgContext([{
             name: "Goto Heading",
-            // fn: () => $allA[0].click(),
             fn: () => ORG.route($allA[0].hash),
           }].concat($allA.toArray().slice(1).map((a) => ({
             name: `Open Link: "${a.text}"`,

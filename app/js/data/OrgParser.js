@@ -32,7 +32,9 @@
   };
 
   const parseNodeForTimestamps = (node, parseInactiveTimestamps) => {
-    let text = node.title + node.text;
+    let text = node.title + node.text +
+      (node.logbook ? node.logbook.join("") : "") +
+      (node.props ? Object.values(node.props).join("") : "");
     let matchA = text.match(orgActiveTimestampGRE);
     let curObj;
     if (matchA) { // active timestamp(s) exist
