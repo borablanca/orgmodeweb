@@ -36,7 +36,7 @@
   const repeatOffset = (str, mlStart, mlEnd) => {
     // finds offset in days of nearest repeating ml to the mlEnd starting on mlStart
     let match = str.match(orgRepeaterSplitRE);
-    let amount = ~~match[2];
+    let amount = +match[2];
     let letter = match[3];
     let diff = mlEnd - mlStart;
     if (diff < 0) return -1;

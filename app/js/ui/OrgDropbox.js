@@ -18,14 +18,16 @@
     };
     let nextFn = () => $container.find(".select").move();
     let prevFn = () => $container.find(".select").move("prev");
-    $(document).orgKeyboard({
-      "return": gotoFn,
-      "tab": gotoFn,
-      "n": nextFn,
-      "down": nextFn,
-      "p": prevFn,
-      "up": prevFn,
-    });
+    if (!$.isMobile()) {
+      $(document).orgKeyboard({
+        "return": gotoFn,
+        "tab": gotoFn,
+        "n": nextFn,
+        "down": nextFn,
+        "p": prevFn,
+        "up": prevFn,
+      });
+    }
     return $container.on("click", "button", (ev) => {
       $container.append("<div class='orgloading'/>");
       let $li = $(ev.target).closest("li");

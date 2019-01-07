@@ -1,7 +1,7 @@
 (() => {
   const init = ($container, opts) => {
     let removeFn = () => $container.off().remove();
-    return $container.orgKeyboard({
+    !$.isMobile() && $container.orgKeyboard({
       "esc": [() => removeFn() && opts.cancel && opts.cancel() && false, {
         delegate: "input",
         fn: () => removeFn() && false,
@@ -10,7 +10,8 @@
         delegate: "input",
         fn: () => opts.confirm() && removeFn() && false,
       },
-    }).on("click", "*:not(input)", function() {
+    });
+    return $container.on("click", "*:not(input)", function() {
       if (this.classList.contains("done")) opts.confirm();
       else opts.cancel && opts.cancel();
       removeFn();

@@ -44,41 +44,44 @@
         },
       }),
     };
-    $(document).orgKeyboard({
-      "return": [() => events.edit($container.find(".select")), {
-        delegate: "input",
-        fn: (ev) => $(ev.target).next().focus().moveCaret().trigger("keydown"),
-      }],
-      "esc": [() => $container.find(".select.edit .close").click(), {
-        delegate: "input,textarea",
-        fn: (ev) => $(ev.target).siblings(".close").click(),
-      }],
-      "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
-        delegate: "input,textarea",
-        fn: (ev) => $(ev.target).siblings(".done").click(),
-      }],
-      "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-      "tab": () => {
-        let $selected = $container.find(".select");
-        return $selected.hasClass("edit") ? $selected.find("input").focus() : $selected.toggleClass("collapsed");
-      },
-      "n": () => $container.find(".select").move(),
-      "down": [() => $container.find(".select").move(), {
-        delegate: "input",
-        fn: (ev) => $(ev.target).next().focus(),
-      }],
-      "p": () => $container.find(".select").move("prev"),
-      "up": () => $container.find(".select").move("prev"),
-    });
-    $.isMobile() && $container.on("contextmenu", "li:not(.edit)", function() {
-      events.edit($(this));
-      return false;
-    });
+    if (!$.isMobile()) {
+      $(document).orgKeyboard({
+        "return": [() => events.edit($container.find(".select")), {
+          delegate: "input",
+          fn: (ev) => $(ev.target).next().focus().moveCaret().trigger("keydown"),
+        }],
+        "esc": [() => $container.find(".select.edit .close").click(), {
+          delegate: "input,textarea",
+          fn: (ev) => $(ev.target).siblings(".close").click(),
+        }],
+        "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
+          delegate: "input,textarea",
+          fn: (ev) => $(ev.target).siblings(".done").click(),
+        }],
+        "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
+        "tab": () => {
+          let $selected = $container.find(".select");
+          return $selected.hasClass("edit") ? $selected.find("input").focus() : $selected.toggleClass("collapsed");
+        },
+        "n": () => $container.find(".select").move(),
+        "down": [() => $container.find(".select").move(), {
+          delegate: "input",
+          fn: (ev) => $(ev.target).next().focus(),
+        }],
+        "p": () => $container.find(".select").move("prev"),
+        "up": () => $container.find(".select").move("prev"),
+      });
+    } else {
+      $container.on("contextmenu", "li:not(.edit)", function() {
+        events.edit($(this));
+        return false;
+      });
+    }
     return $container.on("click", "li:not(.edit)", function(ev) {
       $(this).mark().toggleClass("collapsed");
       return false;
-    }).on("click", "pre", function() {
-      $(this).mark();
+    }).on("click", "pre", (ev) => {
+      $(ev.target).closest("li").mark();
       return false;
     }).on("click", ".orgicon", function() {
       let $li = $(this).closest("li");

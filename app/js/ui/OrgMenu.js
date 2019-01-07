@@ -5,13 +5,15 @@
     </a>`;
 
   const init = ($container, customAgendas) => {
-    let shortcuts = {
-      a: "#agenda#a",
-      m: () => $container.find(".match").click(),
-      s: () => $container.find(".search").click(),
-    };
-    Object.keys(customAgendas).map((key) => shortcuts[key] = "#agenda#" + key);
-    $(document).orgKeyboard(shortcuts);
+    if (!$.isMobile()) {
+      let shortcuts = {
+        a: "#agenda#a",
+        m: () => $container.find(".match").click(),
+        s: () => $container.find(".search").click(),
+      };
+      Object.keys(customAgendas).map((key) => shortcuts[key] = "#agenda#" + key);
+      $(document).orgKeyboard(shortcuts);
+    }
     return $container.on("click", "button", function() {
       let isM = this.classList.contains("match");
       let $page = $container.closest(".orgpage");

@@ -115,28 +115,31 @@
         return false;
       },
     };
-    $(document).orgKeyboard({
-      "return": () => events.open($container.find(".select")),
-      "tab": () => {
-        let $selected = $container.find(".select");
-        return events[$selected[0].classList.contains("header") ? "cycle" : "open"]($selected);
-      },
-      "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-      "ctrl+l": () => $container.find(".select").scrollCycle(),
-      "b": () => moveCursor("prev", 1),
-      "f": () => moveCursor(0, 1),
-      "n": () => moveCursor(),
-      "down": () => moveCursor(),
-      "p": () => moveCursor("prev"),
-      "up": () => moveCursor("prev"),
-      "u": () => {
-        let $selected = $container.find(".select");
-        return $selected.prevAll(".header").mark($selected);
-      },
-      "<": filter,
-      "alt+<": () => $container.find("pre").first().mark(),
-      "alt+shift+<": () => $container.find("pre").last().mark(),
-    });
+    if (!$.isMobile()) {
+      $(document).orgKeyboard({
+        "return": () => events.open($container.find(".select")),
+        "o": () => events.open($container.find(".select")),
+        "tab": () => {
+          let $selected = $container.find(".select");
+          return events[$selected[0].classList.contains("header") ? "cycle" : "open"]($selected);
+        },
+        "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
+        "ctrl+l": () => $container.find(".select").scrollCycle(),
+        "b": () => moveCursor("prev", 1),
+        "f": () => moveCursor(0, 1),
+        "n": () => moveCursor(),
+        "down": () => moveCursor(),
+        "p": () => moveCursor("prev"),
+        "up": () => moveCursor("prev"),
+        "u": () => {
+          let $selected = $container.find(".select");
+          return $selected.prevAll(".header").mark($selected);
+        },
+        "<": filter,
+        "alt+<": () => $container.find("pre").first().mark(),
+        "alt+shift+<": () => $container.find("pre").last().mark(),
+      });
+    }
     return $container.data("filter", {}).on("click", "pre", function() {
       return events[this.classList.contains("header") ? "cycle" : "open"]($(this).mark());
     }).on("click", "button", (ev) => {

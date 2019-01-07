@@ -6,14 +6,12 @@
   };
 
   $.fn.orgKeyboard = function(keys, keepOldBindings) {
-    if (!$.isMobile()) {
-      !keepOldBindings && this.off();
-      keys["alt+x"] = "#";
-      Object.keys(keys).map((key) => {
-        let obj = keys[key];
-        (obj.constructor === Array) ? obj.map((val) => bindFn(this, key, val)) : bindFn(this, key, obj);
-      });
-    }
+    !keepOldBindings && this.off();
+    keys["alt+x"] = "#";
+    Object.keys(keys).map((key) => {
+      let obj = keys[key];
+      (obj.constructor === Array) ? obj.map((val) => bindFn(this, key, val)) : bindFn(this, key, obj);
+    });
     return this;
   };
 })();

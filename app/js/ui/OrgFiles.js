@@ -19,8 +19,8 @@
 
   const init = ($container) => {
     let gotoFile = () => {
-      let $selected = $container.find(".select a")[0];
-      return $selected && $selected.click();
+      let selected = $container.find(".select a")[0];
+      return selected && selected.click();
     };
     let events = {
       edit: ($li) => $(itemEditTmpl($li.data("filename")))
@@ -77,37 +77,39 @@
           (status) => $li.removeClass("insync").addClass(syncClasses[status]),
           () => $li.removeClass("insync") && $container.orgNotify("Can't sync file!")),
     };
-    $(document).orgKeyboard({
-      "alt+s": "#settings",
-      "ctrl+return": () => $container.find(".orgnavbar .add").click(),
-      "e": () => events.context($container.find(".select")),
-      "esc": [() => $container.find(".select.edit .close").click(), {
-        delegate: "input",
-        fn: (ev) => $(ev.target).siblings(".close").click(),
-      }],
-      "r": () => {
-        let $li = $container.find(".select:not(.edit)");
-        return $li[0] && events.sync($li, ORG.Store.getFileNames()[$li.data("filename")]);
-      },
-      "shift+r": () => $container.find("li:not(.edit)").map((i, li) => {
-        let $li = $(li);
-        events.sync($li, ORG.Store.getFileNames()[$li.data("filename")]);
-      }),
-      "return": [gotoFile, {
-        delegate: "input",
-        fn: (ev) => $(ev.target).siblings(".done").click(),
-      }],
-      "tab": () => {
-        let $selected = $container.find(".select");
-        return $selected.hasClass("edit") ? $selected.find("input").focus() : gotoFile();
-      },
-      "n": () => $container.find(".select").move(),
-      "down": () => $container.find(".select").move(),
-      "p": () => $container.find(".select").move("prev"),
-      "up": () => $container.find(".select").move("prev"),
-      "alt+<": () => $container.find(".orgfiles>li").first().mark(),
-      "alt+shift+<": () => $container.find(".orgfiles>li").last().mark(),
-    }, 1);
+    if (!$.isMobile()) {
+      $(document).orgKeyboard({
+        "alt+s": "#settings",
+        "ctrl+return": () => $container.find(".orgnavbar .add").click(),
+        "e": () => events.context($container.find(".select")),
+        "esc": [() => $container.find(".select.edit .close").click(), {
+          delegate: "input",
+          fn: (ev) => $(ev.target).siblings(".close").click(),
+        }],
+        "r": () => {
+          let $li = $container.find(".select:not(.edit)");
+          return $li[0] && events.sync($li, ORG.Store.getFileNames()[$li.data("filename")]);
+        },
+        "shift+r": () => $container.find("li:not(.edit)").map((i, li) => {
+          let $li = $(li);
+          events.sync($li, ORG.Store.getFileNames()[$li.data("filename")]);
+        }),
+        "return": [gotoFile, {
+          delegate: "input",
+          fn: (ev) => $(ev.target).siblings(".done").click(),
+        }],
+        "tab": () => {
+          let $selected = $container.find(".select");
+          return $selected.hasClass("edit") ? $selected.find("input").focus() : gotoFile();
+        },
+        "n": () => $container.find(".select").move(),
+        "down": () => $container.find(".select").move(),
+        "p": () => $container.find(".select").move("prev"),
+        "up": () => $container.find(".select").move("prev"),
+        "alt+<": () => $container.find(".orgfiles>li").first().mark(),
+        "alt+shift+<": () => $container.find(".orgfiles>li").last().mark(),
+      }, 1);
+    }
     return $container.on("click", ".orgicon", function() {
       let $li = $(this).closest("li");
       events[this.classList[1]]($li, ORG.Store.getFileNames()[$li.data("filename")]);
@@ -118,6 +120,7 @@
   $.fn.orgFiles = function(fileNames) {
     return init(this.removeData().off().empty().append(
       $(document.createElement("div")).orgNavbar({
+        github: "https://github.com/borablanca/orgmodeweb",
         add: [{
           name: "Create Local File",
           fn: () => $(itemEditTmpl("")).appendTo(this.find(".orgfiles")).mark().find("input").focus(),
@@ -131,7 +134,7 @@
       }),
       $(document.createElement("div")).orgMenu(ORG.Settings.getCustomAgendas()),
       $.isEmptyObject(fileNames) ?
-        "<ul class='orgfiles'/><div class='orgnotice'>There aren't any org files</div>" :
+        "<ul class='orgfiles'/><div class='orgnotice'><br/>There aren't any org files<br/><br/>Create new file by clicking on + icon</div>" :
         $(document.createElement("ul")).addClass("orgfiles").append(
           Object.keys(fileNames).map((fileName) => itemTmpl(fileName, fileNames[fileName]))
         ).find("li:first-child").addClass("select").end()));
