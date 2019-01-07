@@ -16,7 +16,7 @@
           $.formatStr(settings["agenda-deadline-leaders"][2], node.offset)) : // dl approaching
         (node.hs ? hourTmpl(node.hs, node.he) : settings["agenda-deadline-leaders"][0]); // dl today
     case searcher.itemTypes.STAMP: return hourTmpl(node.hs, node.he);
-    case searcher.itemTypes.ISTMP: return "[ ";
+    case searcher.itemTypes.ISTAMP: return "[ ";
     default: return "";
     }
   };

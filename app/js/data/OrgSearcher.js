@@ -245,8 +245,9 @@
             node.istmps && (nstmps = node.istmps.length)) { // INACTIVE TIMESTAMP exists
           fits[ITEM_TYPE.ISTAMP] = [];
           for (let stmp = 0; stmp < nstmps; stmp++) {
-            if (node.istmps[stmp].ml === sml) { // slot matches istamp
-              fits[ITEM_TYPE.ISTAMP][fits[ITEM_TYPE.ISTAMP].length] = true;
+            curStmp = node.istmps[stmp];
+            if (curStmp.ml === sml) { // slot matches istamp
+              fits[ITEM_TYPE.ISTAMP][fits[ITEM_TYPE.ISTAMP].length] = curStmp;
             }
           }
         }

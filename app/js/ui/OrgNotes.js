@@ -163,17 +163,60 @@
         }],
         "alt+shift+left": () => {
           let $selected = $container.find(".select");
-          let lvl = $selected.data("node").lvl;
+          let lvl = $selected.data("lvl");
           let $next = $selected;
-          while (($next = $next.next()) && $next[0] && $next.data("node").lvl > lvl) $selected = $selected.add($next);
-          events.save(events.editLvl($selected).mark());
+          while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
+          events.editLvl($selected).mark();
+          events.save();
         },
         "alt+shift+right": () => {
           let $selected = $container.find(".select");
-          let lvl = $selected.data("node").lvl;
+          let lvl = $selected.data("lvl");
           let $next = $selected;
-          while (($next = $next.next()) && $next[0] && $next.data("node").lvl > lvl) $selected = $selected.add($next);
-          events.save(events.editLvl($selected, 1).mark());
+          while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
+          events.editLvl($selected, 1).mark();
+          events.save();
+        },
+        "alt+up": () => {
+          let $selected = $container.find(".select");
+          let $prev = $selected.prev();
+          $prev[0] && $selected.after($prev);
+          events.save();
+        },
+        "alt+down": () => {
+          let $selected = $container.find(".select");
+          let $next = $selected.next();
+          $next[0] && $selected.insertAfter($next);
+          events.save();
+        },
+        "alt+shift+up": () => {
+          let $selected = $container.find(".select");
+          let lvl = $selected.data("lvl");
+          let $next = $selected;
+          let $prev = $selected.prev();
+          let prevLvl = +$prev.data("lvl");
+          if (prevLvl >= lvl) {
+            while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
+            if (prevLvl > lvl) {
+              while (($prev = $prev.prev()) && $prev[0] && +$prev.data("lvl") > lvl);
+            }
+            $selected.insertBefore($prev);
+          }
+        },
+        "alt+shift+down": () => {
+          let $selected = $container.find(".select");
+          let lvl = $selected.data("lvl");
+          let $next = $selected;
+          if (+$next.next().data("lvl") >= lvl) {
+            while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
+            if ($next[0]) {
+              lvl = $next.data("lvl");
+              let $nnext = $next;
+              while (($nnext = $next.next()) && $nnext[0] && +$nnext.data("lvl") > lvl) $next = $nnext;
+              $selected.insertAfter($next);
+              events.save();
+            }
+          }
         },
         "t": () => {
           let setFn = (val) => {
