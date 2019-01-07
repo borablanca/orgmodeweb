@@ -45,7 +45,7 @@
         node.stmps[node.stmps.length] = curObj;
       }
     }
-    if (parseInactiveTimestamps && (matchA = text.match(orgInactiveTimestampGRE))) { // an inactive timestamp
+    if (+parseInactiveTimestamps && (matchA = text.match(orgInactiveTimestampGRE))) { // an inactive timestamp
       if (!node.istmps) node.istmps = [];
       for (let i = 0, n = matchA.length; i < n; i++) {
         curObj = reToTimestampObj(matchA[i].match(orgInactiveTimestampRE));
@@ -60,7 +60,7 @@
       let curNode = {text: "", fileName: fileName}; // first node is always page settings node
       if (!text) return [curNode];
       let orgHeadingRE = ORG.Parser.buildOrgHeadingRE(opts["todo-keywords"]);
-      let parseInactiveTimestamps = opts && opts["agenda-include-inactive-timestamps"];
+      let parseInactiveTimestamps = opts && +opts["agenda-include-inactive-timestamps"];
       let nodes = [];
       let lines = text.split("\n");
       let curMatchA;

@@ -91,7 +91,6 @@ gulp.task("scripts", () =>
     "./app/js/data/OrgData.js",
     "./app/js/data/OrgSorter.js",
     "./app/js/data/OrgStore.js",
-    "./app/js/data/OrgDropbox.js",
     "./app/js/data/OrgSettings.js",
     "./app/js/ui/OrgIcons.js",
     "./app/js/ui/OrgKeyboard.js",
@@ -105,6 +104,7 @@ gulp.task("scripts", () =>
     "./app/js/ui/OrgSearch.js",
     "./app/js/ui/OrgNotes.js",
     "./app/js/data/OrgRouter.js",
+    "./app/js/data/OrgDropbox.js",
   ])
     .pipe($.newer(".tmp/js"))
     .pipe($.sourcemaps.init())

@@ -50,13 +50,23 @@
     listFiles: function(path, cursor, fn, err) {
       let dbox = getDropbox();
       dbox && (cursor ? dbox.filesListFolderContinue({cursor: cursor}) :
-        dbox.filesListFolder({path: path, include_media_info: true})).then(fn).catch(() => err && err());
+        dbox.filesListFolder({path: path, include_media_info: true})).then(fn)
+        .catch((e) => {
+          if (e.status === 401) {
+            ORG.Dropbox.unlink().route("#");
+            $("body").orgNotify("Unauthorized Dropbox account");
+          }
+          return err && err();
+        });
       return this;
     },
 
     setDropbox: function() {
       let match = location.hash.match(/access_token=([^&]*)/);
-      if (match) ORG.Store.store(tokenPrefix, match[1]);
+      if (match) {
+        ORG.Store.store(tokenPrefix, match[1]);
+        $("body").orgNotify("Dropbox account added successfully");
+      }
       return this;
     },
 
