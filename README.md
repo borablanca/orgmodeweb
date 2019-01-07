@@ -18,8 +18,8 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
 ## Currently Supported
 
-- **Agenda View :** view agenda similarly in org-mode
-- **Match Search :** match TAG|TODO|PROPERTY as described in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html) (no regexp or backward compatibility), some examples:
+- **Agenda View :** View agenda similarly in org-mode
+- **Match Search :** Match TAG|TODO|PROPERTY as described in [org-mode](https://orgmode.org/manual/Matching-tags-and-properties.html) (no regexp or backward compatibility), some examples:
 
       +tag1-tag2 : show items tagged with "tag1" but not having "tag2"
 
@@ -32,9 +32,9 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
       STYLE=habit : list habits
 
 - **Keyword Search**
-- **Custom TODO keywords :** can set custom TODO keywords and styles in settings
-- **Habits :** properly view habits on agenda (no graph)
-- **Dropbox Sync :** syncronize org files in your Dropbox. Keeps your account key on LocalStorage, there is no server side!
+- **Custom TODO keywords :** You can set custom TODO keywords and styles in settings. Change "todo-keywords" in settings menu, keywords are seperated by space and a "|" symbol seperates the done states as in org-mode (such as: "TODO NEXT | DONE"). You can give styles to each keyword by changing "todo-faces" in settings.
+- **Habits :** Properly view habits on agenda (no graph)
+- **Dropbox Sync :** Syncronize org files in your Dropbox. Keeps your account key on LocalStorage, there is no server side!
 
   - if file name:
 
@@ -46,11 +46,11 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
     ![y](https://placehold.it/15/ffff00/000000?text=+) : currently synchronizing the file
 
-- **Category Filter :** filter by category on Agenda and Search views
-- **Text Formatting :** \*bold* /italic/ \_underline_ [[links][...]]
-- **Inactive Timestamps :** items with inactive timestamps can be shown in agenda
-- **Agenda Sorting :** search results can be sorted by time, habit, category, priority, todo and alpha (thanks to [thenBy.js](https://github.com/Teun/thenBy.js))
-- **Keyboard Shortcuts :** similar to emacs org-mode and org-speed-commands (thanks to [jQuery Hotkeys](https://github.com/tzuryby/jquery.hotkeys))
+- **Category Filter :** You can filter by category on Agenda and Search views by clicking on category name.
+- **Text Formatting :** \*bold* /italic/ \_underline_ [[links][...]] are supported
+- **Inactive Timestamps :** Items with inactive timestamps can be shown in agenda
+- **Agenda Sorting :** Search results can be sorted by time, habit, category, priority, todo and alpha (thanks to [thenBy.js](https://github.com/Teun/thenBy.js))
+- **Keyboard Shortcuts :** Similar to emacs org-mode and org-speed-commands (thanks to [jQuery Hotkeys](https://github.com/tzuryby/jquery.hotkeys))
   - **n, p, f, b, u, down, up :** move cursor on headings
   - **t :** set TODO state of the heading
   - **o :** open link (if any) in the heading
@@ -64,9 +64,9 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
   - **< :** category filter on Agenda and Search views
   - **M-x :** goto file menu
   - **M-s :** goto settings (on file menu)
-- **Custom Agenda Views :** custom agendas similarly in org mode
+- **Custom Agenda Views :** You can build custom agendas similarly in org mode
 
-  As an example to create a 3-day agenda with projects listing (with *prj* tag) and a keyword search section:
+  As an example to build a 3-day agenda with projects listing (with *prj* tag) and a keyword search section:
   1. Create a new setting in settings
   2. Set setting name: custom-agenda-b (last letter will be the shortcut key)
   3. Set value as below
@@ -94,6 +94,16 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 - When saving the org file, OrgModeWeb tries to keep the file as similar as possible to the original, however minor differences may occur such as number of empty lines, but the information will be same.
 
 - Tested and works on latest versions of modern browsers (Chrome, Firefox, Opera, Edge) and Android versions. Haven't tested older versions. Haven't tested on Safari but since it supports service-workers, should work fine.
+
+## Next
+
+Some features I am planning to implement:
+
+- An action toolbar for fast setting of todo, priority, tag, schedule and deadline of headings
+- Move forward and backward days on agenda view
+- Capturing notes
+- Logging of state changes as in org-mode
+- Clocking as in org-mode
 
 ## Installation
 
