@@ -62,7 +62,7 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
   - **enter :** goto file in file menu, change to edit mode when in file
   - **C-l :** center the heading on screen
   - **< :** category filter on Agenda and Search views
-  - **M-x :** goto file menu
+  - **M-x :** goto file menu (org icon on top left also goes to file menu)
   - **M-s :** goto settings (on file menu)
 - **Custom Agenda Views :** You can build custom agendas similarly in org mode
 

@@ -73,6 +73,31 @@ html
     white-space: nowrap
   &+*
     padding-top: 60px
+.orgactionbar
+  align-items: center
+  display: flex
+  height: 35px
+  justify-content: center
+  padding: 0
+  position: fixed
+  top: 60px
+  width: 100%
+  z-index: 5
+  &>button
+    background: $buttonBgColor
+    border-top: 3px solid $bgColor
+    border-right: 3px solid $bgColor
+    flex-grow: 1
+    height: 100%
+    margin: 0
+    padding: 0 5px
+    text-transform: uppercase
+    &:active
+      background: $buttonActiveBgColor
+    &:last-child
+      border-right: none
+  &+*
+    padding-top: 100px
 .orgmenu
   display: grid
   grid-gap: 3px
@@ -353,6 +378,10 @@ pre
     &:hover
       path
         fill: $iconHoverBgColor
+  .orgactionbar
+    button
+      &:hover
+        background: $buttonHoverBgColor
   .orgfiles, .orgdropbox
     li:hover
       background: $buttonHoverBgColor

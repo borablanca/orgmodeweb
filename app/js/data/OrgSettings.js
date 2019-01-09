@@ -43,7 +43,7 @@
     }, {}),
 
     getTodoKeywords: (settings, settingsNode) => (settingsNode.TODO || settingsNode.SEQ_TODO || settingsNode.TYP_TODO || settings["todo-keywords"])
-      .replace(/\([^)]*\)/g, "").split(" ").filter(Boolean),
+      .replace(/\([^)]*\)|\|/g, "").split(" ").filter(Boolean),
 
     setSettings: function(newSettings, extraFields) {
       let storeVal = ORG.Store.store(settingsPrefix);

@@ -100,7 +100,7 @@
         },
         reset: () => this.orgNotify({
           content: "Reset all settings to default values?",
-          confirm: () => ORG.Store.setSettings({}) && this.orgSettings(),
+          confirm: () => ORG.Settings.setSettings({}) && this.orgSettings(ORG.Settings.getSettings()),
         }),
         title: "Settings",
       }),

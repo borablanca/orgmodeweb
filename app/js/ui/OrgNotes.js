@@ -52,66 +52,68 @@
       .data("node", data).replaceAll(this.removeData());
   };
 
-  const init = ($container, settings) => {
-    let events = {
-      close: ($li) => $li.hasClass("new") ? $li.remove() : $li.removeClass("edit").refresh().mark(),
-      delete: ($li) => $container.orgNotify({
-        content: "Delete note?",
-        confirm: () => {
-          events.save($li.removeData().remove());
-          let $orgnotes = $container.find(".orgnotes");
-          if (!$orgnotes.find("li")[0] && !$orgnotes.find(".orgnotice")[0]) {
-            $orgnotes.append("<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div></div>");
-          }
-        },
-      }),
-      done: ($li) => {
-        let data = $li.data("node") || {lvl: 1};
-        let bodyTxt = $li.find("textarea").val();
-        let txt = `${"*".repeat(data.lvl)} ${$li.find("input").val()}${bodyTxt.length ? "\n" + bodyTxt : ""}`;
-        $li.removeClass("edit").refresh(settings, ORG.Parser.parse("", txt, settings)[1]).mark();
-        $container.find(".orgnavbar").removeClass("sync").end().find(".orgnotice").remove();
-        return events.save();
-      },
-      edit: ($li) => {
-        let data = $li.data("node");
-        return $(itemEditTmpl(data, settings))
-          .data("node", data)
-          .replaceAll($li.removeData()).mark()
-          .find("input").focus().end()
-          .find("textarea").autoHeight();
-      },
-      context: ($li, noedit) => {
-        let $allA = $li.mark().find("a");
-        $allA[0] ? $container.orgContext((noedit ? [] : [{
-          name: "Edit",
-          fn: () => events.edit($li),
-        }]).concat($.map($allA, ((a) => ({
-          name: "Goto Link: " + a.text,
-          fn: () => ORG.route(a.href),
-        })))), () => $container.find(".select").scrollTo()) :
-          !noedit && events.edit($li);
-        return false;
-      },
-      save: () => {
-        let fname = $container.find(".orgnavbar span").text();
-        try {
-          let allText = $.map($(".notesettings pre"), (pre) => pre.textContent);
-          allText = allText.slice(0, allText.length - 1).join("\n") + (allText[allText.length - 1] || "");
-          return ORG.Store.setFile(fname,
-            [ORG.Parser.parse(fname, allText, settings)[0]]
-              .concat($.map($container.find(".orgnotes>li"), (k) => $(k).data("node"))),
-            fname);
-        } catch (e) {
-          return $container.orgNotify({content: e});
+  const events = {
+    close: ($li) => $li.hasClass("new") ? $li.remove() : $li.removeClass("edit").refresh().mark(),
+    context: ($li, settings, $container, noedit) => {
+      let $allA = $li.mark().find("a");
+      $allA[0] ? $container.orgContext((noedit ? [] : [{
+        name: "Edit",
+        fn: () => events.edit($li, settings),
+      }]).concat($.map($allA, ((a) => ({
+        name: "Goto Link: " + a.text,
+        fn: () => ORG.route(a.href),
+      })))), () => $container.find(".select").scrollTo()) :
+        !noedit && events.edit($li, settings);
+      return false;
+    },
+    delete: ($li, settings, $container) => $container.orgNotify({
+      content: "Delete note?",
+      confirm: () => {
+        $li.removeData().remove();
+        events.save($container);
+        let $orgnotes = $container.find(".orgnotes");
+        if (!$orgnotes.find("li")[0] && !$orgnotes.find(".orgnotice")[0]) {
+          $orgnotes.append("<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div></div>");
         }
       },
-      editLvl: ($li, increase) => $li.map((idx, curLi) => {
-        let $curLi = $(curLi);
-        let data = $curLi.data("node");
-        return $curLi.refresh(settings, ORG.Data.set(data, {lvl: increase ? data.lvl + 1 : Math.max(data.lvl - 1, 1)}));
-      }).get(0),
-    };
+    }),
+    done: ($li, settings, $container) => {
+      let data = $li.data("node") || {lvl: 1};
+      let bodyTxt = $li.find("textarea").val();
+      let txt = `${"*".repeat(data.lvl)} ${$li.find("input").val()}${bodyTxt.length ? "\n" + bodyTxt : ""}`;
+      $li.removeClass("edit").refresh(settings, ORG.Parser.parse("", txt, settings)[1]).mark();
+      $container.find(".orgnavbar").removeClass("sync").end().find(".orgnotice").remove();
+      return events.save($container);
+    },
+    edit: ($li, settings) => {
+      let data = $li.data("node");
+      return $(itemEditTmpl(data, settings))
+        .data("node", data)
+        .replaceAll($li.removeData()).mark()
+        .find("input").focus().end()
+        .find("textarea").autoHeight();
+    },
+    editLvl: ($li, settings, increase) => $li.map((idx, curLi) => {
+      let $curLi = $(curLi);
+      let data = $curLi.data("node");
+      return $curLi.refresh(settings, ORG.Data.set(data, {lvl: increase ? data.lvl + 1 : Math.max(data.lvl - 1, 1)}));
+    }).get(0),
+    save: ($container) => {
+      try {
+        let filename = $container.find(".orgnavbar span").text();
+        let allText = $.map($(".notesettings pre"), (pre) => pre.textContent);
+        allText = allText.slice(0, allText.length - 1).join("\n") + (allText[allText.length - 1] || "");
+        return ORG.Store.setFile(filename,
+          [ORG.Parser.parse(filename, allText, ORG.Settings.getSettings())[0]]
+            .concat($.map($container.find(".orgnotes>li"), (k) => $(k).data("node"))),
+          filename);
+      } catch (e) {
+        return $container.orgNotify({content: e});
+      }
+    },
+  };
+
+  const init = ($container, settings) => {
     if (!$.isMobile()) {
       $(document).orgKeyboard({
         "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
@@ -125,10 +127,10 @@
         "ctrl+l": () => $container.find(".select").scrollTo(),
         "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
           delegate: "input,textarea",
-          fn: (ev) => $(ev.target).siblings(".done").click() && events.save(),
+          fn: (ev) => $(ev.target).siblings(".done").click() && events.save($container),
         }],
-        "o": () => events.context($container.find(".select"), 1),
-        "return": [() => events.edit($container.find(".select")), {
+        "o": () => events.context($container.find(".select"), settings, $container, 1),
+        "return": [() => events.edit($container.find(".select"), settings, $container), {
           delegate: "input",
           fn: (ev) => $(ev.target).next().focus(),
         }],
@@ -153,41 +155,47 @@
         },
         "alt+<": () => $container.find(".orgnotes>li").first().mark(),
         "alt+shift+<": () => $container.find(".orgnotes>li").last().mark(),
-        "alt+left": [() => events.save(events.editLvl($container.find(".select")).mark()), {
+        "alt+left": [() => {
+          events.editLvl($container.find(".select"), settings).mark();
+          return events.save($container);
+        }, {
           delegate: "input,textarea",
-          fn: (ev) => events.editLvl($(ev.target).closest("li")).find("input").select(),
+          fn: (ev) => events.editLvl($(ev.target).closest("li"), settings).find("input").select(),
         }],
-        "alt+right": [() => events.save(events.editLvl($container.find(".select"), 1).mark()), {
+        "alt+right": [() => {
+          events.editLvl($container.find(".select"), settings, $container, 1).mark();
+          return events.save($container);
+        }, {
           delegate: "input,textarea",
-          fn: (ev) => events.editLvl($(ev.target).closest("li"), 1).find("input").select(),
+          fn: (ev) => events.editLvl($(ev.target).closest("li"), settings, $container, 1).find("input").select(),
         }],
         "alt+shift+left": () => {
           let $selected = $container.find(".select");
           let lvl = $selected.data("lvl");
           let $next = $selected;
           while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
-          events.editLvl($selected).mark();
-          events.save();
+          events.editLvl($selected, settings, $container).mark();
+          events.save($container);
         },
         "alt+shift+right": () => {
           let $selected = $container.find(".select");
           let lvl = $selected.data("lvl");
           let $next = $selected;
           while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
-          events.editLvl($selected, 1).mark();
-          events.save();
+          events.editLvl($selected, settings, $container, 1).mark();
+          events.save($container);
         },
         "alt+up": () => {
           let $selected = $container.find(".select");
           let $prev = $selected.prev();
           $prev[0] && $selected.after($prev);
-          events.save();
+          events.save($container);
         },
         "alt+down": () => {
           let $selected = $container.find(".select");
           let $next = $selected.next();
           $next[0] && $selected.insertAfter($next);
-          events.save();
+          events.save($container);
         },
         "alt+shift+up": () => {
           let $selected = $container.find(".select");
@@ -214,26 +222,15 @@
               let $nnext = $next;
               while (($nnext = $next.next()) && $nnext[0] && +$nnext.data("lvl") > lvl) $next = $nnext;
               $selected.insertAfter($next);
-              events.save();
+              events.save($container);
             }
           }
         },
-        "t": () => {
-          let setFn = (val) => {
-            let $selected = $container.find(".select");
-            $selected.refresh(settings, ORG.Data.set($selected.data("node"), {todo: val})).mark();
-            events.save();
-            return false;
-          };
-          $container.orgContext([{name: "None", fn: setFn}].concat(
-            Object.keys(settings["todo-faces"]).map((todo) => ({name: todo, fn: () => setFn(todo)}))),
-          () => $container.find(".select").scrollTo());
-          return false;
-        },
+        "t": () => $(".orgactionbar .todo").click(),
       });
     } else {
       $container.on("contextmenu", "li:not(.edit)", function() {
-        events.context($(this));
+        events.context($(this), settings, $container);
         return false;
       });
     }
@@ -244,7 +241,7 @@
       $(this).closest("li").mark();
       return false;
     }).on("click", ".orgicon", function() {
-      events[this.classList[1]]($(this).closest("li"));
+      events[this.classList[1]]($(this).closest("li"), settings, $container);
       return false;
     }).on("click", ".collapsible div:first-child", function() {
       $(this).parent().toggleClass("collapsed");
@@ -319,6 +316,7 @@
         },
         title: fileName,
       }),
+      $(document.createElement("div")).orgActionbar(this, events, curSettings),
       `<div class="notesettings">
         ${Object.keys(settingsNode).map((key) => settingTmpl(key, settingsNode[key])).join("")}
         ${settingsNode.text ? `<pre>${settingsNode.text}</pre>` : ""}
