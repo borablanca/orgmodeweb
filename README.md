@@ -60,6 +60,7 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
   - **M-<, M-> :** go-to beginning and end of file
   - **C-enter :** create new file/heading/setting
   - **enter :** goto file in file menu, change to edit mode when in file
+  - **space :** show/open all drawers of the heading
   - **C-l :** center the heading on screen
   - **< :** category filter on Agenda and Search views
   - **M-x :** goto file menu (org icon on top left also goes to file menu)

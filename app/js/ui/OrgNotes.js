@@ -111,6 +111,7 @@
         return $container.orgNotify({content: e});
       }
     },
+    show: ($li) => $li.find(".collapsible").removeClass("collapsed") && false,
   };
 
   const init = ($container, settings) => {
@@ -153,6 +154,7 @@
           while (($selected = $selected.prev()) && $selected[0] && $selected.data("node").lvl + 1 !== lvl);
           return $selected.mark();
         },
+        "space": () => events.show($container.find(".select")),
         "alt+<": () => $container.find(".orgnotes>li").first().mark(),
         "alt+shift+<": () => $container.find(".orgnotes>li").last().mark(),
         "alt+left": [() => {

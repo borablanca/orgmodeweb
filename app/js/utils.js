@@ -68,16 +68,16 @@
 
     if (nlvl > lvl) {
       if (this.hasClass("collapsed")) {
-        this.toggleClass("collapsed");
+        this.toggleClass("collapsed").find(".collapsible").addClass("collapsed");
         $next.show();
         while (($next = $next.next()) && $next[0] && (data = $next.data("node")) && data && (nlvl = data.lvl - 1)) (nlvl === lvl) && $next.show();
       } else if ($next.hasClass("collapsed")) {
-        while (($next = $next.removeClass("collapsed").show().next()) && $next[0] && (data = $next.data("node")) && data && data.lvl > lvl);
+        while (($next = $next.removeClass("collapsed").show().find(".collapsible").addClass("collapsed").end().next()) && $next[0] && (data = $next.data("node")) && data && data.lvl > lvl);
       } else {
         this.toggleClass("collapsed");
         while (($next = $next.addClass("collapsed").hide().next()) && $next[0] && (data = $next.data("node")) && data && data.lvl > lvl);
       }
-    } else this.toggleClass("collapsed");
+    } else this.toggleClass("collapsed").find(".collapsible").addClass("collapsed");
     return this;
   },
 
