@@ -165,7 +165,7 @@
           fn: (ev) => events.editLvl($(ev.target).closest("li"), settings).find("input").select(),
         }],
         "alt+right": [() => {
-          events.editLvl($container.find(".select"), settings, $container, 1).mark();
+          events.editLvl($container.find(".select"), settings, 1).mark();
           return events.save($container);
         }, {
           delegate: "input,textarea",
@@ -176,7 +176,7 @@
           let lvl = $selected.data("lvl");
           let $next = $selected;
           while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
-          events.editLvl($selected, settings, $container).mark();
+          events.editLvl($selected, settings).mark();
           events.save($container);
         },
         "alt+shift+right": () => {
@@ -184,7 +184,7 @@
           let lvl = $selected.data("lvl");
           let $next = $selected;
           while (($next = $next.next()) && $next[0] && +$next.data("lvl") > lvl) $selected = $selected.add($next);
-          events.editLvl($selected, settings, $container, 1).mark();
+          events.editLvl($selected, settings, 1).mark();
           events.save($container);
         },
         "alt+up": () => {
@@ -230,6 +230,7 @@
         },
         "t": () => $(".orgactionbar .todo").click(),
         ",": () => $(".orgactionbar .pri").click(),
+        "g": () => $(".orgactionbar .tags").click(),
       });
     } else {
       $container.on("contextmenu", "li:not(.edit)", function() {

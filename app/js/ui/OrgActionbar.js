@@ -1,37 +1,53 @@
 (() => {
   const events = {
-    todo: ($container, $orgview, orgviewEvents, settings) => {
+    todo: ($orgview, orgviewEvents, settings) => {
       let $selected = $orgview.find(".select");
       if ($selected[0]) {
         let setFn = (val) => {
-          let $selected = $orgview.find(".select");
           $selected.refresh(settings, Object.assign($selected.data("node"), {todo: val})).mark();
           orgviewEvents.save($orgview);
           return false;
         };
-        $container.orgContext([{name: "None", fn: setFn}].concat(
+        $orgview.orgContext([{name: "None", fn: setFn}].concat(
           settings["todo-keywords"].map((todo) => ({name: todo, fn: () => setFn(todo)}))),
         () => $orgview.find(".select").scrollTo());
       }
       return false;
     },
-    pri: ($container, $orgview, orgviewEvents, settings) => {
+    pri: ($orgview, orgviewEvents, settings) => {
       let $selected = $orgview.find(".select");
       if ($selected[0]) {
         let setFn = (val) => {
-          let $selected = $orgview.find(".select");
           $selected.refresh(settings, Object.assign($selected.data("node"), {pri: val})).mark();
           orgviewEvents.save($orgview);
           return false;
         };
-        $container.orgContext([{name: "None", fn: setFn}].concat(
+        $orgview.orgContext([{name: "None", fn: setFn}].concat(
           settings["priority-letters"].map((letter) => ({name: letter, fn: () => setFn(letter)}))),
         () => $orgview.find(".select").scrollTo());
       }
       return false;
     },
-    tags: () => {
-      // TODO
+    tags: ($orgview, orgviewEvents, settings) => {
+      let $selected = $orgview.find(".select");
+      if ($selected[0]) {
+        let curTags = $selected.data("node").tags;
+        $orgview.orgNotify({
+          content: "Tag(s): ",
+          prompt: true,
+          value: curTags ? curTags.split(":").filter(Boolean).join(" ") : "",
+          confirm: () => {
+            let newTags = $(".orgnotify input", $orgview).val().split(/:| +/);
+            newTags = newTags.filter((item, index) => {
+              return item.length && newTags.indexOf(item) >= index;
+            }).join(":");
+            let data = Object.assign($selected.data("node"), {tags: newTags.length ? (":" + newTags + ":") : undefined});
+            $selected.refresh(settings, data).mark();
+            return orgviewEvents.save($orgview);
+          },
+        });
+      }
+      return false;
     },
     sch: () => {
       // TODO
@@ -48,7 +64,6 @@
   };
 
   $.fn.orgActionbar = function($orgview, orgviewEvents, settings) {
-    let that = this;
     return this.addClass("orgactionbar").html(
       `<button class="todo"><u>t</u>odo</button>
       <button class="pri">PRI</button>
@@ -58,7 +73,7 @@
       <button class="props">PROP</button>
       <button class="note">NOTE</button>`
     ).on("click", "button", function() {
-      events[this.classList[0]](that, $orgview, orgviewEvents, settings);
+      events[this.classList[0]]($orgview, orgviewEvents, settings);
       return false;
     });
   };
