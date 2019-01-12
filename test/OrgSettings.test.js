@@ -26,4 +26,19 @@ QUnit.module("OrgSettings Tests", function(hooks) {
     assert.equal(customAgendas.b[1].filter, "+prj+LEVEL<2");
     assert.equal(customAgendas.b[1].header, "My Projects");
   });
+
+  QUnit.test("get todo keywords", function(assert) {
+    let todoKeywords = ORG.Settings.getTodoKeywords(ORG.Settings.getSettings(), {});
+    assert.equal(todoKeywords.length, 2);
+    assert.equal(todoKeywords[0], "TODO");
+    assert.equal(todoKeywords[1], "DONE");
+  });
+
+  QUnit.test("get priority letters", function(assert) {
+    let priLetters = ORG.Settings.getPriorityLetters(ORG.Settings.getSettings(), {});
+    assert.equal(priLetters.length, 3);
+    assert.equal(priLetters[0], "A");
+    assert.equal(priLetters[1], "B");
+    assert.equal(priLetters[2], "C");
+  });
 });

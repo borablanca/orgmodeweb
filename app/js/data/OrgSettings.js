@@ -37,6 +37,8 @@
   }).join("")}</style>`;
     },
 
+    getPriorityLetters: (settings) => settings["priority-letters"].split(" "),
+
     getTodoFaces: (settings) => settings["todo-faces"].split("\n").map((x) => $.shellSplit(x)).reduce((obj, x) => {
       obj[x[0]] = arrToObj(x.slice(1));
       return obj;

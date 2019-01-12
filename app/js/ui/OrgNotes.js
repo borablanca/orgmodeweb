@@ -229,6 +229,7 @@
           }
         },
         "t": () => $(".orgactionbar .todo").click(),
+        ",": () => $(".orgactionbar .pri").click(),
       });
     } else {
       $container.on("contextmenu", "li:not(.edit)", function() {
@@ -256,6 +257,7 @@
     let nodes = ORG.Store.getFile(fileName, settings);
     let settingsNode = nodes[0];
     let curSettings = {
+      "priority-letters": ORG.Settings.getPriorityLetters(settings),
       "todo-faces": ORG.Settings.getTodoFaces(settings),
       "todo-keywords": ORG.Settings.getTodoKeywords(settings, settingsNode),
     };

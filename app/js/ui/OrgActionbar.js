@@ -15,8 +15,20 @@
       }
       return false;
     },
-    pri: () => {
-      // TODO
+    pri: ($container, $orgview, orgviewEvents, settings) => {
+      let $selected = $orgview.find(".select");
+      if ($selected[0]) {
+        let setFn = (val) => {
+          let $selected = $orgview.find(".select");
+          $selected.refresh(settings, Object.assign($selected.data("node"), {pri: val})).mark();
+          orgviewEvents.save($orgview);
+          return false;
+        };
+        $container.orgContext([{name: "None", fn: setFn}].concat(
+          settings["priority-letters"].map((letter) => ({name: letter, fn: () => setFn(letter)}))),
+        () => $orgview.find(".select").scrollTo());
+      }
+      return false;
     },
     tags: () => {
       // TODO
@@ -39,7 +51,7 @@
     let that = this;
     return this.addClass("orgactionbar").html(
       `<button class="todo"><u>t</u>odo</button>
-      <button class="pri">PR<u>I</u></button>
+      <button class="pri">PRI</button>
       <button class="tags">TA<u>G</u></button>
       <button class="sch"><u>S</u>CH</button>
       <button class="dl"><u>D</u>L</button>

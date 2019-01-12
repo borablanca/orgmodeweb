@@ -2,6 +2,9 @@ QUnit.module("OrgNavbar Tests", function(hooks) {
   hooks.before(function() {
     $("body").append("<div id='app' style='display:none;'></div>");
   });
+  hooks.after(function() {
+    $("#app").empty().off().remove();
+  });
 
   QUnit.test("show empty navbar", function(assert) {
     $("#app").orgNavbar();
