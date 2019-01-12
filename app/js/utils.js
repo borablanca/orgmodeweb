@@ -32,6 +32,12 @@
     return str;
   };
 
+  $.htmlEncode = (str) => {
+    let el = document.createElement("div");
+    el.innerText = el.textContent = str;
+    return el.innerHTML;
+  };
+
   const replace = (str, matches, tag) => {
     for (let i in matches) { // eslint-disable-line
       let next = matches[i].trim();
@@ -43,6 +49,9 @@
   $.markup = (str = "") => {
     let linkRe = ORG.Parser.linkRE;
     let match;
+    let el = document.createElement("div");
+    el.innerText = el.textContent = str;
+    str = el.innerHTML;
     while (match = str.match(linkRe)) { // links
       str = str.replace(match[0], `<a class="link" href="${match[1]}">` + match[2] + "</a>");
     }

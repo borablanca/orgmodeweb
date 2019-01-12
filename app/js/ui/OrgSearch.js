@@ -62,7 +62,7 @@
     tags: (searchResult, settings) => {
       let archiveRE = ORG.Parser.archiveRE;
       return `<div class="orgsearchslot" >
-        <pre class="header">${searchResult.header}</pre>
+        <pre class="header">${$.htmlEncode(searchResult.header)}</pre>
         ${ searchResult.nodes.filter((node) => !node.itag.match(archiveRE)).map((node) => tagItemTmpl(node, settings)).join("")}
       </div > `;
     },

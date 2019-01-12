@@ -379,7 +379,9 @@ pre
       path
         fill: $iconHoverBgColor
   .orgactionbar
-    button
+    button:disabled
+      color: #555
+    button:not([disabled])
       &:hover
         background: $buttonHoverBgColor
   .orgfiles, .orgdropbox

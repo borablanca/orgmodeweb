@@ -68,10 +68,10 @@
       `<button class="todo"><u>t</u>odo</button>
       <button class="pri">PRI</button>
       <button class="tags">TA<u>G</u></button>
-      <button class="sch"><u>S</u>CH</button>
-      <button class="dl"><u>D</u>L</button>
-      <button class="props">PROP</button>
-      <button class="note">NOTE</button>`
+      <button class="sch" disabled><u>S</u>CH</button>
+      <button class="dl" disabled><u>D</u>L</button>
+      <button class="props" disabled>PROP</button>
+      <button class="note" disabled>NOTE</button>`
     ).on("click", "button", function() {
       events[this.classList[0]]($orgview, orgviewEvents, settings);
       return false;

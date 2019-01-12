@@ -10,7 +10,7 @@
         ${node.todo ? `<span class="todo todo-${node.todo}">${node.todo}</span>` : ""}
         ${node.pri ? `<span class="pri">[#${node.pri}]</span>` : ""}
         ${node.title ? `<span>${$.markup(node.title)}</span>` : ""}
-        ${node.tags ? `<span class="tags">${node.tags}</span>` : ""}
+        ${node.tags ? `<span class="tags">${$.markup(node.tags)}</span>` : ""}
       </span>
       <div class="body">
         ${node.cls ? `<div class="cls">CLOSED: <span class="ts">${writeTimestamp(node.cls, true)}</span></div>` : ""}

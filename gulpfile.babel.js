@@ -96,6 +96,7 @@ gulp.task("scripts", () =>
     "./app/js/ui/OrgKeyboard.js",
     "./app/js/ui/OrgMenu.js",
     "./app/js/ui/OrgNavbar.js",
+    "./app/js/ui/OrgActionBar.js",
     "./app/js/ui/OrgContext.js",
     "./app/js/ui/OrgNotify.js",
     "./app/js/ui/OrgFiles.js",
