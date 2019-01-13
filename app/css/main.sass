@@ -83,6 +83,8 @@ html
   top: 60px
   width: 100%
   z-index: 5
+  &>button:disabled
+    color: #555
   &>button
     background: $buttonBgColor
     border: 3px solid $bgColor
@@ -379,8 +381,6 @@ pre
       path
         fill: $iconHoverBgColor
   .orgactionbar
-    button:disabled
-      color: #555
     button:not([disabled])
       &:hover
         background: $buttonHoverBgColor

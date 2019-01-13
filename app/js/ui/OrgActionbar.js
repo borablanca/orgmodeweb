@@ -8,9 +8,13 @@
           orgviewEvents.save($orgview);
           return false;
         };
-        $orgview.orgContext([{name: "None", fn: setFn}].concat(
-          settings["todo-keywords"].map((todo) => ({name: todo, fn: () => setFn(todo)}))),
-        () => $orgview.find(".select").scrollTo());
+        let todos = [{name: "None", fn: setFn}];
+        let todoKeywords = settings["todo-keywords"];
+        for (let i = 0, l = todoKeywords.length, curTodo; i < l; i++) {
+          curTodo = todoKeywords[i];
+          if (curTodo.length > 1) todos[todos.length] = {name: curTodo, fn: () => setFn(curTodo)};
+        }
+        $orgview.orgContext(todos, () => $orgview.find(".select").scrollTo());
       }
       return false;
     },

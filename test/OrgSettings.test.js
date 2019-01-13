@@ -29,9 +29,10 @@ QUnit.module("OrgSettings Tests", function(hooks) {
 
   QUnit.test("get todo keywords", function(assert) {
     let todoKeywords = ORG.Settings.getTodoKeywords(ORG.Settings.getSettings(), {});
-    assert.equal(todoKeywords.length, 2);
+    assert.equal(todoKeywords.length, 3);
     assert.equal(todoKeywords[0], "TODO");
-    assert.equal(todoKeywords[1], "DONE");
+    assert.equal(todoKeywords[1], "|");
+    assert.equal(todoKeywords[2], "DONE");
   });
 
   QUnit.test("get priority letters", function(assert) {

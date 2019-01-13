@@ -9,10 +9,12 @@
       else data[field] = values[(index >= 0 ? index : values.length) - 1]; // if falsy set prev value in the setting values
       return data;
     },
-    toggleTag: (data, tag) => {
+    toggleTag: (data, newTags) => {
       let tags = data.tags ? data.tags.split(":").filter(Boolean) : [];
-      let index = tags.indexOf(tag);
-      index > -1 ? tags.splice(index, 1) : (tags[tags.length] = tag);
+      newTags.split(/:| /).forEach((tag) => {
+        let index = tags.indexOf(tag);
+        index > -1 ? tags.splice(index, 1) : (tags[tags.length] = tag);
+      });
       tags.length ? data.tags = `:${tags.join(":")}:` : delete data.tags;
       return data;
     },
