@@ -1,17 +1,13 @@
 "use strict";
 
-import path from "path";
-import gulp from "gulp";
-import del from "del";
-import runSequence from "run-sequence";
-import browserSync from "browser-sync";
-import swPrecache from "sw-precache";
-import gulpLoadPlugins from "gulp-load-plugins";
-import { output as pagespeed } from "psi";
-import pkg from "./package.json";
-
-const $ = gulpLoadPlugins();
-const reload = browserSync.reload;
+const path = require("path");
+const gulp = require("gulp");
+const del = require("del");
+const browserSync = require("browser-sync");
+const swPrecache = require("sw-precache");
+const $ = require("gulp-load-plugins")();
+const psi = require("psi");
+const pkg = require("./package.json");
 
 gulp.task("lint", () =>
   gulp.src(["app/js/**/*.js", "!node_modules/**"])
@@ -80,8 +76,7 @@ gulp.task("styles", () => {
 gulp.task("scripts", () =>
   gulp.src([
     "./app/js/lib/jquery.hotkeys.js",
-    "./app/js/lib/thenBy.js",
-    "./app/js/utils.js",
+    "./app/js/data/OrgUtils.js",
     "./app/js/main.js",
     "./app/js/ui/OrgCalendar.js",
     "./app/js/data/OrgDefaults.js",
@@ -105,7 +100,7 @@ gulp.task("scripts", () =>
     "./app/js/ui/OrgSearch.js",
     "./app/js/data/OrgDropbox.js",
     "./app/js/ui/OrgNotes.js",
-    "./app/js/data/OrgRouter.js",
+    "./app/js/ui/OrgRouter.js",
   ])
     .pipe($.newer(".tmp/js"))
     .pipe($.sourcemaps.init())
@@ -128,7 +123,6 @@ gulp.task("html", () => {
       searchPath: "{.tmp,app}",
       noAssets: true
     }))
-
     // Minify any HTML
     .pipe($.if("*.html", $.htmlmin({
       removeComments: true,
@@ -148,8 +142,13 @@ gulp.task("html", () => {
 
 gulp.task("clean", () => del([".tmp", "dist/*", "!dist/.git"], { dot: true }));
 
-gulp.task("serve", ["scripts", "styles"], () => {
-  browserSync({
+gulp.task("reload", (done) => {
+  browserSync.reload();
+  done();
+});
+
+gulp.task("serve", gulp.series("lint", "scripts", "styles", () => {
+  browserSync.init({
     notify: false,
     logPrefix: "ORG",
     // Allow scroll syncing across breakpoints
@@ -158,69 +157,11 @@ gulp.task("serve", ["scripts", "styles"], () => {
     server: [".tmp", "app"],
     port: 3000
   });
-
-  gulp.watch(["app/**/*.html"], reload);
-  gulp.watch(["app/css/**/*.{sass,css}"], ["styles", reload]);
-  gulp.watch(["app/js/**/*.js"], ["lint", "scripts", reload]);
-  gulp.watch(["app/img/**/*"], reload);
-});
-
-gulp.task("serve:dist", ["default"], () =>
-  browserSync({
-    notify: false,
-    logPrefix: "ORG",
-    // Allow scroll syncing across breakpoints
-    scrollElementMapping: ["main"],
-    // https: true,
-    server: "dist",
-    port: 3001
-  })
-);
-
-// Build production files, the default task
-gulp.task("default", ["clean"], cb =>
-  runSequence(
-    "styles",
-    ["lint", "html", "scripts", "images", "copy"],
-    "generate-service-worker",
-    cb
-  )
-);
-
-gulp.task("test", () => {
-  gulp.src([
-    "./node_modules/jquery/dist/jquery.min.js",
-    "./node_modules/qunit/qunit/qunit.css",
-    "./node_modules/qunit/qunit/qunit.js",
-    "./node_modules/qunit-assert-close/qunit-assert-close.js",
-    "./node_modules/qunit-assert-compare/qunit-assert-compare.js",
-    "./node_modules/qunit-dom/dist/qunit-dom.js"
-  ], {
-      dot: true
-    }).pipe($.newer("test/lib"))
-    .pipe(gulp.dest("test/lib"))
-    .pipe($.size({ title: "copy" }))
-  browserSync({
-    files: ["test/*.test.js", "app/js/**/*.js"],
-    notify: true,
-    logPrefix: "ORG_TEST",
-    server: ".",
-    single: true,
-    startPath: "test/qunit.html",
-    port: 3003
-  })
-});
-
-// Run PageSpeed Insights
-gulp.task("pagespeed", cb =>
-  // Update the below URL to the public URL of your site
-  pagespeed("https://org.firebaseapp.com", {
-    strategy: "mobile"
-    // By default we use the PageSpeed Insights free (no API key) tier.
-    // Use a Google Developer API key if you have one: http://goo.gl/RkN0vE
-    // key: 'YOUR_API_KEY'
-  }, cb)
-);
+  gulp.watch("app/**/*.html", gulp.series("reload"));
+  gulp.watch("app/css/**/*.{sass,css}", gulp.series("styles", "reload"));
+  gulp.watch("app/js/**/*.js", gulp.series("lint", "scripts", "reload"));
+  gulp.watch("app/img/**/*", gulp.series("reload"));
+}));
 
 // Copy over the scripts that are used in importScripts as part of the generate-service-worker task.
 gulp.task("copy-sw-scripts", () => {
@@ -233,7 +174,7 @@ gulp.task("copy-sw-scripts", () => {
 // Generate a service worker file that will provide offline functionality for
 // local resources. This should only be done for the 'dist' directory, to allow
 // live reload to work as expected when serving from the 'app' directory.
-gulp.task("generate-service-worker", ["copy-sw-scripts"], () => {
+gulp.task("generate-service-worker", gulp.series("copy-sw-scripts"), () => {
   const rootDir = "dist";
   const filepath = path.join(rootDir, "service-worker.js");
 
@@ -259,6 +200,49 @@ gulp.task("generate-service-worker", ["copy-sw-scripts"], () => {
   });
 });
 
-// Load custom tasks from the `tasks` directory
-// Run: `npm install --save-dev require-dir` from the command-line
-// try { require('require-dir')('tasks'); } catch (err) { console.error(err); }
+// Build production files, the default task
+gulp.task("default", gulp.series("clean", "styles", "html", "lint", "scripts", "images", "copy", "generate-service-worker"), cb => cb()
+);
+
+gulp.task("serve:dist", gulp.series("default"), () =>
+  browserSync({
+    notify: false,
+    logPrefix: "ORG",
+    // Allow scroll syncing across breakpoints
+    scrollElementMapping: ["main"],
+    // https: true,
+    server: "dist",
+    port: 3001
+  })
+);
+
+gulp.task("reloadTest", (done) => {
+  browserSync.reload();
+  done();
+});
+
+gulp.task("test", () => {
+  // browserify for funcunit
+
+  browserSync({
+    files: ["test/*.test.js", "app/js/**/*.js"],
+    notify: true,
+    logPrefix: "ORG_TEST",
+    server: ".",
+    single: true,
+    startPath: "test/qunit.html?hidepassed",
+    port: 3003
+  });
+  // gulp.watch("test/*.test.js", gulp.series("reloadTest"));
+  // gulp.watch("app/js/**/*.js", gulp.series("reloadTest"));
+});
+
+// Run PageSpeed Insights
+gulp.task("pagespeed", (done) => {
+  psi('orgmodeweb.org').then(data => {
+    console.log('Speed score:', data.ruleGroups.SPEED.score);
+    console.log('Usability score:', data.ruleGroups.USABILITY.score);
+    console.log(data.pageStats);
+  });
+  done();
+});

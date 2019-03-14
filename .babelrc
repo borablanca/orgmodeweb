@@ -1,6 +1,6 @@
 {
   "presets": [
-    "es2015"
+    "@babel/preset-env"
   ],
   // "only": "gulpfile.babel.js",
   "retainLines": true
