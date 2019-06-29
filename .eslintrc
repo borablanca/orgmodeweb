@@ -8,6 +8,10 @@
     "extends": [
         "eslint:recommended"
     ],
+    "globals": {
+        "ORG": true,
+        "Dropbox": true
+    },
     "parserOptions": {
         "sourceType": "module"
     },
