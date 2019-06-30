@@ -1,33 +1,55 @@
 (() => {
   const sortStrategies = {
-    time: (node1, node2) => {
-      let offset = node1.type - node2.type; // sort by type
-      if (offset !== 0) return offset;
-      else {
-        offset = (node2.offset || 0) - (node1.offset || 0); // sort by offset
-        return offset !== 0 ? offset : 0;
-      }
+    "alpha": (n1, n2) => {
+      const n1title = n1.TITLE;
+      const n2title = n2.TITLE;
+      return n1title < n2title ? 1 : n1title > n2title ? -1 : 0;
     },
-    habit: (node1, node2) => (node1.habit || node2.habit) ? (!node1.habit ? 1 : -1) : 0,
-    category: (node1, node2) => node1.cat < node2.cat ? -1 : (node1.cat > node2.cat ? 1 : 0),
-    priority: (node1, node2) => 1.0 / (node1.pri || "B").charCodeAt() - 1.0 / (node2.pri || "B").charCodeAt(),
-    todo: (node1, node2) => node1.todoi - node2.todoi,
-    alpha: (node1, node2) => node1.title < node2.title ? -1 : (node1.title > node2.title ? 1 : 0),
+    "category": (n1, n2) => {
+      const n1cat = n1.PROPS.CATEGORY || n1.ICATEGORY;
+      const n2cat = n2.PROPS.CATEGORY || n2.ICATEGORY;
+      return n1cat < n2cat ? -1 : n1cat > n2cat ? 1 : 0;
+    },
+    "habit": (n1, n2) => {
+      const n2habit = n2.PROPS.STYLE === "habit";
+      return n1.PROPS.STYLE === "habit" ? n2habit ? 0 : 1 : n2habit ? -1 : 0;
+    },
+    "priority": (n1, n2) => (n1.PRI || "B").charCodeAt() - (n2.PRI || "B").charCodeAt(),
+    "time": (n1, n2) => {
+      const typeDiff = n2.TYPE - n1.TYPE;
+      if (typeDiff) return typeDiff;
+      const n1offset = n1.OFFSET;
+      const n2offset = n2.OFFSET;
+      const n2hs = n2.STAMP && n2.STAMP.hs;
+      if (!n2offset && n1offset && n2hs) return -1;
+      const n1hs = n1.STAMP && n1.STAMP.hs;
+      if (!n1offset && n2offset && n1hs) return 1;
+      return n1offset - n2offset || (n1hs ? n2hs ? n1hs < n2hs ? 1 : -1 : 1 : n2hs ? -1 : 0);
+    },
+    "todo": (n1, n2) => n2.TODOIDX - n1.TODOIDX,
   };
 
   ORG.Sorter = {
-    sort: (nodes, strategy) => {
-      let strategies = strategy.split(" ");
-      let sorted = firstBy((node1, node2) => { // eslint-disable-line
-        let hs1 = (!node1.offset || node1.habit) && node1.hs;
-        let hs2 = (!node2.offset || node2.habit) && node2.hs;
-        return (hs1 || hs2) ? (!hs1 ? 1 : (!hs2 ? -1 : (hs1 < hs2) ? -1 : (hs1 > hs2 ? 1 : 0))) : 0;
-      });
-      for (let i = 0, curStrategy, nstrategy = strategies.length; i < nstrategy; i++) {
-        curStrategy = strategies[i].split("-");
-        sorted = sorted.thenBy(sortStrategies[curStrategy[0]], curStrategy[1] === "down" ? -1 : 1);
+    "sort": (nodes = [], strategy) => {
+      if (!strategy) return nodes;
+      const rules = [];
+
+      for (let sortRuleCounter = 0, sorts = strategy.split(/\s+/), nsorts = sorts.length, curSort; sortRuleCounter < nsorts;) {
+        curSort = sorts[sortRuleCounter++].split("-");
+        if (curSort.length === 2 && sortStrategies[curSort[0]]) {
+          rules.push(curSort[1] === "up" ?
+            (n1, n2) => -1 * sortStrategies[curSort[0]](n1, n2) :
+            sortStrategies[curSort[0]]);
+        }
       }
-      return nodes.sort(sorted);
+
+      return nodes.sort((n1, n2) => {
+        for (let rule = 0, ruleTest = 0, nrules = rules.length; rule < nrules;) {
+          ruleTest = rules[rule++](n1, n2);
+          if (ruleTest !== 0) return ruleTest;
+        }
+        return 0;
+      });
     },
   };
 })();
