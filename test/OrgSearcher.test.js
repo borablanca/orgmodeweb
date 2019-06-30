@@ -1,119 +1,24 @@
-QUnit.module("OrgSearcher Tests", function() {
-  QUnit.test("search empty, unknown or no type", function(assert) {
-    let nodes;
-    assert.notOk(ORG.Searcher.search(nodes, [{}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: ""}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: "something"}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: undefined}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: null}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: 1}])[0].slots);
-    assert.notOk(ORG.Searcher.search(nodes, [{type: "\\"}])[0].slots);
-  });
+/* eslint-disable max-lines */
 
-  let settings = ORG.defaults;
-  // settings["todo-keywords"] = settings["todo-keywords"].split(" ");
-
-  QUnit.test("agendas", function(assert) {
-    assert.timeout(1000);
-    assert.expect(63);
-    let done = assert.async(1);
-    $.get("./OrgSearcher.test.org", function(orgfile) {
-      let nodes = ORG.Parser.parse("test.org", orgfile, ORG.defaults);
-      let agenda = ORG.Searcher.search(nodes, [{
-        "type": "agenda",
-        "start-date": "<2018-04-15 Sun>",
-        "agenda-span": 4,
-      }, {
-        "type": "agenda",
-        "agenda-span": 4,
-      }], settings);
-
-      let slots = agenda[0].slots;
-
-      assert.equal(slots.length, 4);
-      assert.equal(slots[0].type, ORG.Searcher.slotTypes.AGENDA);
-      assert.equal(slots[0].nodes.length, 7);
-      assert.equal(slots[0].nodes[0].id, 1);
-      assert.equal(slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-      assert.equal(slots[0].nodes[0].offset, undefined);
-      assert.equal(slots[0].nodes[1].id, 2);
-      assert.equal(slots[0].nodes[1].type, ORG.Searcher.itemTypes.SCH);
-      assert.equal(slots[0].nodes[2].id, 3);
-      assert.equal(slots[0].nodes[2].range, undefined);
-      assert.equal(slots[0].nodes[2].offset, undefined);
-      assert.equal(slots[0].nodes[3].id, 3);
-      assert.equal(slots[0].nodes[3].type, ORG.Searcher.itemTypes.STAMP);
-      assert.equal(slots[0].nodes[3].offset, undefined);
-      assert.equal(slots[0].nodes[3].range, "1/3");
-      assert.equal(slots[0].nodes[4].id, 5);
-      assert.equal(slots[0].nodes[4].type, ORG.Searcher.itemTypes.DL);
-      assert.equal(slots[0].nodes[4].offset, undefined);
-      assert.equal(slots[0].nodes[5].id, 6);
-      assert.equal(slots[0].nodes[5].type, ORG.Searcher.itemTypes.STAMP);
-      assert.equal(slots[0].nodes[5].offset, undefined);
-      assert.equal(slots[0].nodes[6].id, 7);
-      assert.equal(slots[0].nodes[6].type, ORG.Searcher.itemTypes.STAMP);
-      assert.equal(slots[0].nodes[6].offset, undefined);
-
-      assert.equal(slots[1].nodes.length, 2);
-      assert.equal(slots[1].nodes[0].id, 2);
-      assert.equal(slots[1].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-      assert.equal(slots[1].nodes[0].offset, 0);
-      assert.equal(slots[1].nodes[1].id, 3);
-      assert.equal(slots[1].nodes[1].type, ORG.Searcher.itemTypes.STAMP);
-      assert.equal(slots[1].nodes[1].range, "2/3");
-      assert.equal(slots[1].nodes[1].offset, undefined);
-
-      assert.equal(slots[2].nodes[0].id, 2);
-      assert.equal(slots[2].nodes[0].offset, 0);
-      assert.equal(slots[2].nodes[1].id, 3);
-      assert.equal(slots[2].nodes[1].range, "3/3");
-      assert.equal(slots[2].nodes[1].offset, undefined);
-      assert.equal(slots[3].nodes.length, 1);
-
-
-      slots = agenda[1].slots;
-
-      assert.equal(slots[0].nodes.length, 5);
-      assert.equal(slots[0].nodes[0].id, 1);
-      assert.close(slots[0].nodes[0].offset, ($.now() - new Date("2018-04-15").getTime()) / 86400000, 0.99); // sch xn days passed
-      assert.equal(slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-      assert.equal(slots[0].nodes[1].id, 2);
-      assert.equal(slots[0].nodes[1].offset, 0); // sch xn days passed
-      assert.equal(slots[0].nodes[1].type, ORG.Searcher.itemTypes.SCH);
-      assert.equal(slots[0].nodes[2].id, 3);
-      assert.equal(slots[0].nodes[2].type, ORG.Searcher.itemTypes.SCH);
-      assert.close(slots[0].nodes[2].offset, ($.now() - new Date("2018-04-15").getTime()) / 86400000, 0.99); // sch xn days passed
-      assert.equal(slots[0].nodes[3].id, 4);
-      assert.equal(slots[0].nodes[3].type, ORG.Searcher.itemTypes.SCH);
-      assert.close(slots[0].nodes[3].offset, ($.now() - new Date("2018-04-15").getTime()) / 86400000, 0.99); // sch xn days passed
-      assert.equal(slots[0].nodes[4].id, 5);
-      assert.equal(slots[0].nodes[4].type, ORG.Searcher.itemTypes.DL);
-      assert.close(slots[0].nodes[4].offset, ($.now() - new Date("2018-04-15").getTime()) / 86400000, 0.99); // dl xn days passed
-      assert.equal(slots[1].nodes.length, 1);
-      assert.equal(slots[1].nodes[0].id, 2); // repeating sch
-      assert.equal(slots[1].nodes[0].offset, 0); // repeating sch
-      assert.equal(slots[2].nodes.length, 1);
-      assert.equal(slots[2].nodes[0].id, 2); // repeating sch
-      assert.equal(slots[2].nodes[0].offset, 0); // repeating sch
-      assert.equal(slots[3].nodes.length, 1);
-      assert.equal(slots[3].nodes[0].id, 2); // repeating sch
-      assert.equal(slots[3].nodes[0].offset, 0); // repeating sch
-      done();
-    });
-  });
-
-  let orgfile = `
+QUnit.module("OrgSearcher Tests", () => {
+  const defaults = ORG.defaults;
+  const search = ORG.Searcher.search;
+  const SearchItemType = ORG.Searcher.SearchItemType;
+  const DAY = 86400000;
+  const fileProvider = {
+    "getFileNames": () => ["file1", "file2"],
+    "getFile": (fname = "") => ({
+      "file1": `
 #+CATEGORY: global-category
 #+SEQ_TODO: TODO NEXT | DONE CANC
 
-* category not properly written doesnt work!
+* [#C] category not properly written doesnt work!  :tag1:
 :PROPERTIES:
 CATEGORY: cat1
 :PROP1: val1
 :PROP2: 1
 :END:
-* works properly        :tag1:
+* [#A] works properly        :tag1:
 :PROPERTIES:
 :CATEGORY: cat1
 :END:
@@ -126,818 +31,885 @@ DEADLINE: <2018-04-03>
 * TODO node with todo work also
 :PROPERTIES:
 :CATEGORY: cat2
-:END:`;
-
-  let nodes = ORG.Parser.parse("test.org", orgfile, settings);
-  let globOpts = $.extend({}, settings, {
-    "todo-keywords": "TODO NEXT | DONE",
+:END:`,
+      "file2": `* scheduled
+SCHEDULED: <2018-04-15>
+* repeating scheduled (schedule can have leading ':')
+:SCHEDULED: <2018-04-15 +1d>
+* range schedule
+SCHEDULED: <2018-04-15>--<2018-04-17>
+* delayed schedule
+SCHEDULED: <2018-04-15 -2d>
+* deadline
+DEADLINE: <2018-04-15>
+* timestamp
+<2018-04-15>
+* spelling mistakes
+SCHEDULED <2018-04-15>
+* spelling mistakes
+SCHEDULED: <2018-04-15
+* spelling mistakes
+SCHEDULED: <2018-0-15>`
+    })[fname]
+  };
+  QUnit.test("search empty, unknown or no type", (assert) => {
+    assert.notOk(search([{}], fileProvider, defaults)[0].length);
+    assert.notOk(search([{"type": ""}], fileProvider, defaults)[0].length);
+    assert.notOk(search([{"type": "something"}], fileProvider, defaults)[0].length);
+    assert.notOk(search([{"type": null}], fileProvider, defaults)[0].length);
+    assert.notOk(search([{"type": 1}], fileProvider, defaults)[0].length);
+    assert.notOk(search([{"type": "\\"}], fileProvider, defaults)[0].length);
   });
-  let result;
-  QUnit.test("filter search - empty or no filter", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
+  QUnit.test("agendas", (assert) => { // eslint-disable-line max-statements
+    assert.timeout(1000);
+    const slots = search([{
+      "type": "agenda",
+      "start-date": "<2018-04-15 Sun>",
+      "agenda-span": 4,
+      "agenda-files": "file2"
+    }, {
+      "type": "agenda",
+      "agenda-span": 4,
+      "agenda-files": "file2"
+    }], fileProvider, defaults);
 
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
+    assert.equal(slots.length, 8);
+    assert.equal(slots[0].type, "agenda");
+    assert.equal(slots[0].length, 7);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, 0);
+    assert.equal(slots[0][1].ID, 1);
+    assert.equal(slots[0][1].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][2].ID, 2);
+    assert.equal(slots[0][2].RANGE, "");
+    assert.equal(slots[0][2].OFFSET, 0);
+    assert.equal(slots[0][3].ID, 2);
+    assert.equal(slots[0][3].TYPE, SearchItemType.STAMP);
+    assert.equal(slots[0][3].OFFSET, 0);
+    assert.equal(slots[0][3].RANGE, "1/3");
+    assert.equal(slots[0][4].ID, 4);
+    assert.equal(slots[0][4].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][4].OFFSET, 0);
+    assert.equal(slots[0][5].ID, 5);
+    assert.equal(slots[0][5].TYPE, SearchItemType.STAMP);
+    assert.equal(slots[0][5].OFFSET, 0);
+    assert.equal(slots[0][6].ID, 6);
+    assert.equal(slots[0][6].TYPE, SearchItemType.STAMP);
+    assert.equal(slots[0][6].OFFSET, 0);
+
+    assert.equal(slots[1].length, 2);
+    assert.equal(slots[1][0].ID, 1);
+    assert.equal(slots[1][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[1][0].OFFSET, 0);
+    assert.equal(slots[1][1].ID, 2);
+    assert.equal(slots[1][1].TYPE, SearchItemType.STAMP);
+    assert.equal(slots[1][1].RANGE, "2/3");
+    assert.equal(slots[1][1].OFFSET, 0);
+
+    assert.equal(slots[2][0].ID, 1);
+    assert.equal(slots[2][0].OFFSET, 0);
+    assert.equal(slots[2][1].ID, 2);
+    assert.equal(slots[2][1].RANGE, "3/3");
+    assert.equal(slots[2][1].OFFSET, 0);
+    assert.equal(slots[3].length, 1);
+
+    const now = new Date().getTime();
+    assert.equal(slots[4].length, 5);
+    assert.equal(slots[4][0].ID, 0);
+    assert.ok(Math.abs((now - new Date("2018-04-15").getTime()) / DAY - slots[4][0].OFFSET) < 0.99); // sch xn days passed
+    assert.equal(slots[4][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[4][1].ID, 1);
+    assert.equal(slots[4][1].OFFSET, 0); // sch xn days passed
+    assert.equal(slots[4][1].TYPE, SearchItemType.SCH);
+    assert.equal(slots[4][2].ID, 2);
+    assert.equal(slots[4][2].TYPE, SearchItemType.SCH);
+    assert.ok(Math.abs((now - new Date("2018-04-15").getTime()) / DAY - slots[4][2].OFFSET) < 0.99); // sch xn days passed
+    assert.equal(slots[4][3].ID, 3);
+    assert.equal(slots[4][3].TYPE, SearchItemType.SCH);
+    assert.ok(Math.abs((now - new Date("2018-04-15").getTime()) / DAY - slots[4][3].OFFSET) < 0.99); // sch xn days passed
+    assert.equal(slots[4][4].ID, 4);
+    assert.equal(slots[4][4].TYPE, SearchItemType.DL);
+    assert.ok(Math.abs((now - new Date("2018-04-15").getTime()) / DAY - slots[4][4].OFFSET) < 0.99); // dl xn days passed
+    assert.equal(slots[5].length, 1);
+    assert.equal(slots[5][0].ID, 1); // repeating sch
+    assert.equal(slots[5][0].OFFSET, 0); // repeating sch
+    assert.equal(slots[6].length, 1);
+    assert.equal(slots[6][0].ID, 1); // repeating sch
+    assert.equal(slots[6][0].OFFSET, 0); // repeating sch
+    assert.equal(slots[7].length, 1);
+    assert.equal(slots[7][0].ID, 1); // repeating sch
+    assert.equal(slots[7][0].OFFSET, 0); // repeating sch
   });
+  QUnit.test("filter search - empty or no filter", (assert) => {
+    let slots = search([{
+      "type": "match"
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
 
-  QUnit.test("type search", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      text: "global category",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 5);
-
-    result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      filter: "DEADLINE",
-      text: "also",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 4);
-  });
-
-  QUnit.test("filter search - misspellings", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "-",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 2", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "*",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 3", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "\\",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 4", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 5", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 6", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"\"", // eslint-disable-line no-useless-escape
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 7", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"*\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 8", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=-",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 9", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\\",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - misspellings 10", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "|CATEGORY=\\",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-
-  QUnit.test("filter search - CATEGORY 1", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"cat1\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
-    assert.equal(result[0].nodes[0].id, 2);
-    assert.equal(result[0].nodes[1].id, 3);
-    assert.equal(result[0].nodes[2].id, 4);
+    slots = search([{
+      "type": "match",
+      "filter": "",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
   });
 
-  QUnit.test("filter search - CATEGORY 2", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=\"global-category\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
-    assert.equal(result[0].nodes[0].id, 1);
-    assert.equal(result[0].nodes[1].id, 5);
+  QUnit.test("text search", (assert) => {
+    let slots = search([{
+      "type": "search",
+      "text": "global category"
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 4);
+
+    slots = search([{
+      "agenda-files": "file1",
+      "type": "search",
+      "filter": "DEADLINE",
+      "text": "also",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 3);
   });
 
-  QUnit.test("filter search - CATEGORY 3", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "|CATEGORY=cat1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
+  QUnit.test("filter search - misspellings", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "-",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 2", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "*",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 3", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "\\",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 4", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 5", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\"\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 6", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\"\"", // eslint-disable-line no-useless-escape
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 7", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\"*\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 8", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=-",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 9", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\\",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("filter search - misspellings 10", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "|CATEGORY=\\",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
   });
 
-  QUnit.test("filter search - CATEGORY 4", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=cat1|",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
+  QUnit.test("filter search - CATEGORY 1", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "filter": "CATEGORY=\"cat1\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 3);
+    assert.equal(slots[0][0].ID, 1);
+    assert.equal(slots[0][1].ID, 2);
+    assert.equal(slots[0][2].ID, 3);
+  });
+  QUnit.test("filter search - CATEGORY 2", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=\"global-category\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 3);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 4);
+    assert.equal(slots[0][2].ID, 5);
+  });
+  QUnit.test("filter search - CATEGORY 3", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "|CATEGORY=cat1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 3);
+  });
+  QUnit.test("filter search - CATEGORY 4", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=cat1|",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 3);
+  });
+  QUnit.test("filter search - CATEGORY 5", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=cat1|CATEGORY=\"cat2\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 4);
   });
 
-  QUnit.test("filter search - CATEGORY 5", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=cat1|CATEGORY=\"cat2\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 4);
+  QUnit.test("filter search - TODO 1", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "TODO=\"DONE\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 5);
   });
-  QUnit.test("filter search - TODO 1", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TODO=\"DONE\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 6);
+  QUnit.test("filter search - TODO 2", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "TODO<>\"DONE\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 6);
   });
-  QUnit.test("filter search - TODO 2", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TODO<>\"DONE\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 6);
-  });
-  QUnit.test("filter search - TODO 2", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TODO=DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-  });
-  QUnit.test("filter search - LEVEL 1", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL=2",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 3);
-  });
-  QUnit.test("filter search - LEVEL 2", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL>2",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 4);
-  });
-  QUnit.test("filter search - LEVEL 3", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL>=2",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 3);
-  });
-  QUnit.test("filter search - LEVEL 4", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL<>1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 3);
-  });
-  QUnit.test("filter search - LEVEL 5", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL=\"1\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 5);
-  });
-  QUnit.test("filter search - LEVEL 6 (also checks #+SEQ_TODO)", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL=1|TODO=NEXT",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 6);
-  });
-  QUnit.test("filter search - LEVEL 7", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL=1+TODO=DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 6);
-  });
-  QUnit.test("filter search - LEVEL 8", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL>1+TODO<>DONE-CATEGORY<>\"cat1\"",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 3);
-  });
-  QUnit.test("filter search - LEVEL 9", function(assert) {
-    result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "LEVEL<=2+CATEGORY=\"cat1\"|TODO=DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
-    assert.equal(result[0].nodes[0].id, 2);
-  });
-  QUnit.test("filter search - TAG 1", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "tag1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 4);
-    assert.equal(result[0].nodes[0].id, 2);
-    assert.equal(result[0].nodes[1].id, 3);
-    assert.equal(result[0].nodes[2].id, 4);
-    assert.equal(result[0].nodes[3].id, 6);
+  QUnit.test("filter search - TODO 3", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "TODO=DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
   });
 
-  QUnit.test("filter search - TAG 2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "+tag1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 4);
-    assert.equal(result[0].nodes[0].id, 2);
-    assert.equal(result[0].nodes[1].id, 3);
-    assert.equal(result[0].nodes[2].id, 4);
-    assert.equal(result[0].nodes[3].id, 6);
+  QUnit.test("filter search - LEVEL 1", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL=2",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 2);
+  });
+  QUnit.test("filter search - LEVEL 2", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL>2",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 3);
+  });
+  QUnit.test("filter search - LEVEL 3", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL>=2",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 2);
+  });
+  QUnit.test("filter search - LEVEL 4", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL<>1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 2);
+  });
+  QUnit.test("filter search - LEVEL 5", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "LEVEL=\"1\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 5);
+  });
+  QUnit.test("filter search - LEVEL 6 (also checks #+SEQ_TODO)", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "LEVEL=1|TODO=NEXT",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 6);
+  });
+  QUnit.test("filter search - LEVEL 7", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL=1+TODO=DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 5);
+  });
+  QUnit.test("filter search - LEVEL 8", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL>1+TODO<>DONE-CATEGORY<>\"cat1\"",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 2);
+  });
+  QUnit.test("filter search - LEVEL 9", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "LEVEL<=2+CATEGORY=\"cat1\"|TODO=DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 3);
+    assert.equal(slots[0][0].ID, 1);
   });
 
-  QUnit.test("filter search - TAG 3", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "-tag1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 3);
-    assert.equal(result[0].nodes[0].id, 1);
-    assert.equal(result[0].nodes[1].id, 5);
-    assert.equal(result[0].nodes[2].id, 7);
+  QUnit.test("filter search - TAG 1", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "tag1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 5);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 1);
+    assert.equal(slots[0][2].ID, 2);
+    assert.equal(slots[0][3].ID, 3);
+    assert.equal(slots[0][4].ID, 5);
+  });
+  QUnit.test("filter search - TAG 2", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "+tag1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 5);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 1);
+    assert.equal(slots[0][2].ID, 2);
+    assert.equal(slots[0][3].ID, 3);
+    assert.equal(slots[0][4].ID, 5);
+  });
+  QUnit.test("filter search - TAG 3", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "-tag1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 4);
+    assert.equal(slots[0][1].ID, 6);
+  });
+  QUnit.test("filter search - TAG 4", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "tag1+tag2",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 5);
+  });
+  QUnit.test("filter search - TAG 5", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "tag2-tag1|TODO=DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 5);
   });
 
-  QUnit.test("filter search - TAG 4", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "tag1+tag2",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 6);
+  QUnit.test("filter search - PROPERTY", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "PROP1=val1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 0);
+  });
+  QUnit.test("filter search - PROPERTY 2", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "PROP2=1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 0);
   });
 
-  QUnit.test("filter search - TAG 5", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "tag2-tag1|TODO=DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 6);
+  QUnit.test("filter search - DEADLINE 1", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "DEADLINE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 3);
   });
-  QUnit.test("filter search - PROPERTY", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "PROP1=val1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 1);
+  QUnit.test("filter search - DEADLINE 2", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "+DEADLINE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 3);
   });
-  QUnit.test("filter search - PROPERTY 2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "PROP2=1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 1);
+  QUnit.test("filter search - DEADLINE 3", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "+DEADLINE+TODO=NEXT",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 3);
   });
-  QUnit.test("filter search - DEADLINE 1", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "DEADLINE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 4);
+
+  QUnit.test("filter search - SCHEDULED 1", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "+SCHEDULED",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 1);
   });
-  QUnit.test("filter search - DEADLINE 2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "+DEADLINE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 4);
+  QUnit.test("filter search - SCHEDULED 2", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "SCHEDULED|DEADLINE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 1);
   });
-  QUnit.test("filter search - DEADLINE 3", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "+DEADLINE+TODO=NEXT",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 4);
+  QUnit.test("filter search - TIMESTAMP", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "TIMESTAMP",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 4);
   });
-  QUnit.test("filter search - SCHEDULED 1", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "+SCHEDULED",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 2);
+  QUnit.test("filter search - TIMESTAMP 2", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "TIMESTAMP+LEVEL=1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 4);
   });
-  QUnit.test("filter search - SCHEDULED 2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "SCHEDULED|DEADLINE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 2);
+  QUnit.test("filter search - TODO", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "TODO",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 3);
+    assert.equal(slots[0][1].ID, 6);
   });
-  QUnit.test("filter search - TIMESTAMP", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TIMESTAMP",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 5);
+  QUnit.test("filter search - -TODO", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "-TODO",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 4);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 1);
+    assert.equal(slots[0][2].ID, 2);
+    assert.equal(slots[0][3].ID, 4);
   });
-  QUnit.test("filter search - TIMESTAMP 2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TIMESTAMP+LEVEL=1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 5);
+  QUnit.test("filter search - DONE", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 5);
   });
-  QUnit.test("filter search - TODO", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "TODO",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 4);
-    assert.equal(result[0].nodes[1].id, 7);
+  QUnit.test("filter search - -DONE", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
+      "type": "tags",
+      "filter": "-DONE",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 6);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 1);
+    assert.equal(slots[0][2].ID, 2);
+    assert.equal(slots[0][3].ID, 3);
+    assert.equal(slots[0][4].ID, 4);
+    assert.equal(slots[0][5].ID, 6);
   });
-  QUnit.test("filter search - -TODO", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "-TODO",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 4);
-    assert.equal(result[0].nodes[0].id, 1);
-    assert.equal(result[0].nodes[1].id, 2);
-    assert.equal(result[0].nodes[2].id, 3);
-    assert.equal(result[0].nodes[3].id, 5);
+  QUnit.test("filter search - -TODO+CATEGORY+tag", (assert) => {
+    const slots = search([{
+      "type": "tags",
+      "filter": "CATEGORY=cat1-TODO+tag1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 1);
+    assert.equal(slots[0][1].ID, 2);
   });
-  QUnit.test("filter search - DONE", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 6);
-  });
-  QUnit.test("filter search - -DONE", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "-DONE",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 6);
-    assert.equal(result[0].nodes[0].id, 1);
-    assert.equal(result[0].nodes[1].id, 2);
-    assert.equal(result[0].nodes[2].id, 3);
-    assert.equal(result[0].nodes[3].id, 4);
-    assert.equal(result[0].nodes[4].id, 5);
-    assert.equal(result[0].nodes[5].id, 7);
-  });
-  QUnit.test("filter search - -TODO+CATEGORY+tag", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "tags",
-      filter: "CATEGORY=cat1-TODO+tag1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 2);
-    assert.equal(result[0].nodes[0].id, 2);
-    assert.equal(result[0].nodes[1].id, 3);
-  });
-  QUnit.test("agenda with filter", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
+  QUnit.test("agenda with filter", (assert) => {
+    const slots = search([{
+      "agenda-files": "file1",
       "type": "agenda",
       "agenda-span": 1,
       "start-date": "<2018-04-03>",
       "filter": "TIMESTAMP|DEADLINE|SCHEDULED",
-    }], globOpts);
-    assert.equal(result[0].slots.length, 1);
-    assert.equal(result[0].slots[0].nodes.length, 3);
-    assert.equal(result[0].slots[0].nodes[0].id, 2);
-    assert.equal(result[0].slots[0].nodes[1].id, 4);
-    assert.equal(result[0].slots[0].nodes[2].id, 5);
-  });
-  // QUnit.test("text search", function(assert) {
-  //   let result = ORG.Searcher.search(nodes, [{
-  //     type: "text",
-  //     text: "properly work",
-  //   }], globOpts);
-  //   assert.equal(result[0].nodes.length, 2);
-  //   assert.equal(result[0].nodes[0].id, 1);
-  //   assert.equal(result[0].nodes[1].id, 2);
-  // });
-  // QUnit.test("text search 2", function(assert) {
-  //   let result = ORG.Searcher.search(nodes, [{
-  //     type: "text",
-  //     text: "work properly",
-  //   }], globOpts);
-  //   assert.equal(result[0].nodes.length, 2);
-  //   assert.equal(result[0].nodes[0].id, 1);
-  //   assert.equal(result[0].nodes[1].id, 2);
-  // });
-  // QUnit.test("text search 3", function(assert) {
-  //   let result = ORG.Searcher.search(nodes, [{
-  //     type: "text",
-  //     text: "work \properly", // eslint-disable-line no-useless-escape
-  //   }], globOpts);
-  //   assert.equal(result[0].nodes.length, 2);
-  //   assert.equal(result[0].nodes[0].id, 1);
-  //   assert.equal(result[0].nodes[1].id, 2);
-  // });
-  QUnit.test("text search 4 - no empty text search", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      text: "",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-  QUnit.test("text search 5 - no empty text search2", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      text: "       ",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-  // QUnit.test("text search 6 - no single letter search", function(assert) {
-  //   let result = ORG.Searcher.search(nodes, [{
-  //     type: "search",
-  //     text: "   a    ",
-  //   }], globOpts);
-  //   assert.equal(result[0].nodes.length, 0);
-  // });
-  QUnit.test("text search 7 - no text field", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "search",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-  QUnit.test("text search 8 - null text field", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      text: null,
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 0);
-  });
-  QUnit.test("text search with filter", function(assert) {
-    let result = ORG.Searcher.search(nodes, [{
-      type: "search",
-      text: "works",
-      filter: "+tag1",
-    }], globOpts);
-    assert.equal(result[0].nodes.length, 1);
-    assert.equal(result[0].nodes[0].id, 2);
+    }], fileProvider, defaults);
+    assert.equal(slots.length, 1);
+    assert.equal(slots[0][0].ID, 1);
+    assert.equal(slots[0][1].ID, 3);
+    assert.equal(slots[0][2].ID, 4);
   });
 
-  QUnit.test("repeater tests 1", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nSCHEDULED: <2018-07-01 +6d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("text search 3", (assert) => {
+    const slots = search([{
+      "type": "search",
+      "text": "properly",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 2);
+    assert.equal(slots[0][0].ID, 0);
+    assert.equal(slots[0][1].ID, 1);
+  });
+  QUnit.test("text search 4 - no empty text search", (assert) => {
+    const slots = search([{
+      "type": "search",
+      "text": "",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("text search 5 - no empty text search2", (assert) => {
+    const slots = search([{
+      "type": "search",
+      "text": "       ",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("text search 7 - no text field", (assert) => {
+    const slots = search([{
+      "type": "search",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("text search 8 - null text field", (assert) => {
+    const slots = search([{
+      "type": "search",
+      "text": null,
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 0);
+  });
+  QUnit.test("text search with filter", (assert) => {
+    const slots = search([{
+      "type": "search",
+      "text": "works",
+      "filter": "+tag1",
+    }], fileProvider, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].ID, 1);
+  });
+
+  QUnit.test("repeater 1", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-14>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-    assert.equal(result[0].slots[0].nodes[0].offset, 1);
+    }], {"getFileNames": () => [""], "getFile": () => "\n* repeating\nSCHEDULED: <2018-07-01 +6d>"}, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 6);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    assert.equal(slots[1].length, 0);
   });
-
-  QUnit.test("repeater tests 2", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nSCHEDULED: <2018-07-01 +2w>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("repeater 2", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-14>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-    assert.equal(result[0].slots[0].nodes[0].offset, 13);
+    }], {"getFileNames": () => ["f"], "getFile": () => "\n* repeating\nSCHEDULED: <2018-07-01 +2w>"}, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 14);
 
-    assert.equal(result[0].slots[1].nodes.length, 1);
+    assert.equal(slots[1].length, 0);
   });
-
-  QUnit.test("repeater tests 3", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nSCHEDULED: <2018-04-03 +1m>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("repeater 3", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-05-06>",
       "agenda-span": 4,
-    }], globOpts);
-    result.todayMl = new Date("2018-05-06").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-    assert.equal(result[0].slots[0].nodes[0].offset, 3);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nSCHEDULED: <2019-04-04 +1m>"
+    }, defaults);
+    let prev;
+    const mlStart = new Date("2019-04-04").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
-    assert.equal(result[0].slots[2].nodes.length, 0);
-    assert.equal(result[0].slots[3].nodes.length, 0);
+    for (let timeSpan = new Date(mlStart).getMonth() + 1, cur = mlStart;
+      mlEnd >= cur;
+      timeSpan += 1) {
+      prev = cur;
+      cur = new Date(mlStart).setMonth(timeSpan);
+    }
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, (mlEnd - prev) / DAY);
+
+    assert.equal(slots[1].length, 0);
+    assert.equal(slots[2].length, 0);
+    assert.equal(slots[3].length, 0);
   });
-
-  QUnit.test("repeater tests 4", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nSCHEDULED: <2018-01-31 +1m>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("repeater 4", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-03-04>",
       "agenda-span": 4,
-    }], globOpts);
-    result.todayMl = new Date("2018-03-04").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-    assert.equal(result[0].slots[0].nodes[0].offset, 1);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nSCHEDULED: <2019-01-18 +1m>"
+    }, defaults);
+    let prev;
+    const mlStart = new Date("2019-01-18").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
-    assert.equal(result[0].slots[2].nodes.length, 0);
-    assert.equal(result[0].slots[3].nodes.length, 0);
+    for (let timeSpan = new Date(mlStart).getMonth() + 1, cur = mlStart;
+      mlEnd >= cur;
+      timeSpan += 1) {
+      prev = cur;
+      cur = new Date(mlStart).setMonth(timeSpan);
+    }
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, (mlEnd - prev) / DAY);
+    assert.equal(slots[1].length, 0);
+    assert.equal(slots[2].length, 0);
+    assert.equal(slots[3].length, 0);
   });
-
-  QUnit.test("repeater tests 5", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nSCHEDULED: <2018-01-31 +1y>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("repeater 5", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2019-03-14>",
       "agenda-span": 4,
-    }], globOpts);
-    result.todayMl = new Date("2019-03-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.SCH);
-    assert.equal(result[0].slots[0].nodes[0].offset, 42);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nSCHEDULED: <2019-01-31 +1y>"
+    }, defaults);
+    let prev;
+    const mlStart = new Date("2019-01-31").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
-    assert.equal(result[0].slots[2].nodes.length, 0);
-    assert.equal(result[0].slots[3].nodes.length, 0);
+    for (let timeSpan = new Date().getYear() + 1, cur = mlStart;
+      mlEnd >= cur;
+      timeSpan += 1) {
+      prev = cur;
+      cur = new Date(mlStart).setYear(timeSpan);
+    }
+    assert.equal(slots.length, 4);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
+    assert.equal(slots[0][0].OFFSET, (mlEnd - prev) / DAY);
+    assert.equal(slots[1].length, 0);
+    assert.equal(slots[2].length, 0);
+    assert.equal(slots[3].length, 0);
   });
 
-  QUnit.test("deadline test 1", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nDEADLINE: <2018-07-01>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("deadline 1", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-14>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[0].nodes[0].offset, 13);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* dl\nDEADLINE: <2018-07-01>"
+    }, defaults);
+    const mlStart = new Date("2018-07-01").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][0].OFFSET, (mlEnd - mlStart) / DAY);
+
+    assert.equal(slots[1].length, 0);
   });
-
-  QUnit.test("deadline test 2", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nDEADLINE: <2018-07-16>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("deadline 2", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-14>",
       "agenda-span": 2,
-    }], settings);
-    result.todayMl = new Date("2018-07-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, settings);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[0].nodes[0].offset, -2);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* dl\nDEADLINE: <2018-07-16>"
+    }, defaults);
+    const mlStart = new Date("2018-07-16").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
 
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][0].OFFSET, (mlEnd - mlStart) / DAY);
+
+    assert.equal(slots[1].length, 0);
   });
 
-  QUnit.test("deadline repeater test 1", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nDEADLINE: <2018-06-11 +3d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("deadline repeater 1", (assert) => {
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-06-13>",
       "agenda-span": 3,
-    }], globOpts);
-    result.todayMl = new Date("2018-06-13").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result[0].slots[2].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[0].nodes[0].offset, 2);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nDEADLINE: <2019-06-23 +3d>"
+    }, defaults);
+    const mlStart = new Date("2019-06-23").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
+    const offset = (mlEnd - mlStart) / DAY % 3;
 
-    assert.equal(result[0].slots[1].nodes.length, 1);
-    assert.equal(result[0].slots[1].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[1].nodes[0].offset, 0);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][0].OFFSET, offset);
 
-    assert.equal(result[0].slots[2].nodes.length, 0);
+    if (offset === 2) {
+      assert.equal(slots[1].length, 1);
+      assert.equal(slots[1][0].TYPE, SearchItemType.DL);
+      assert.equal(slots[1][0].OFFSET, 0);
+    }
+
+    if (offset === 1) {
+      assert.equal(slots[2].length, 1);
+      assert.equal(slots[2][0].TYPE, SearchItemType.DL);
+      assert.equal(slots[2][0].OFFSET, 0);
+    }
+  });
+  QUnit.test("deadline repeater 2", (assert) => {
+    const slots = search([{
+      "type": "agenda",
+      "agenda-span": 2,
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nDEADLINE: <2019-01-31 +3m>"
+    }, defaults);
+    let prev;
+    const mlStart = new Date("2019-01-31").setHours(0, 0, 0, 0);
+    const mlEnd = new Date().setHours(0, 0, 0, 0);
+
+    for (let timeSpan = new Date(mlStart).getMonth() + 3, cur = mlStart;
+      mlEnd >= cur;
+      timeSpan += 3) {
+      prev = cur;
+      cur = new Date(mlStart).setMonth(timeSpan);
+    }
+    const offset = (mlEnd - prev) / DAY;
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][0].OFFSET, offset);
+
+    assert.equal(slots[1].length, 0);
+  });
+  QUnit.test("deadline repeater 3", (assert) => {
+    const slots = search([{
+      "type": "agenda",
+      "agenda-span": 2,
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => "\n* repeating\nDEADLINE: <2050-07-31 +4d>"
+    }, defaults);
+    assert.equal(slots[0].length, 0);
+    assert.equal(slots[1].length, 0);
   });
 
-  QUnit.test("deadline repeater test 2", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nDEADLINE: <2018-01-31 +3m>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("deadline warning 1", (assert) => {
+    const date = new Date(new Date().setDate(new Date().getDate() + 3));
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-15>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[0].nodes[0].offset, 75);
-
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => `\n* repeating\nDEADLINE: <${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)} -2d>`
+    }, defaults);
+    assert.equal(slots[0].length, 0);
+    assert.equal(slots[1].length, 0);
+  });
+  QUnit.test("deadline warning 2", (assert) => {
+    const date = new Date(new Date().setDate(new Date().getDate() + 3));
+    const slots = search([{
+      "type": "agenda",
+      "agenda-span": 2,
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => `\n* repeating\nDEADLINE: <${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)} -4d>`
+    }, defaults);
+    assert.equal(slots[0].length, 1);
+    assert.equal(slots[0][0].TYPE, SearchItemType.DL);
+    assert.equal(slots[0][0].OFFSET, -3);
+    assert.equal(slots[1].length, 0);
   });
 
-  QUnit.test("deadline repeater test 3", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating\nDEADLINE: <2018-07-31 +4d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("timestamp 1", (assert) => {
+    const date = new Date(new Date().setDate(new Date().getDate() + 1));
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-15>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 0);
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => `\n* non-repeating<${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)}>`
+    }, defaults);
+    assert.equal(slots[0].length, 0);
+    assert.equal(slots[1].length, 1);
+    assert.equal(slots[1][0].TYPE, SearchItemType.STAMP);
   });
-
-  QUnit.test("deadline warning test 1", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* no-warning\nDEADLINE: <2018-07-18 -2d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("timestamp 2", (assert) => {
+    const date = new Date(new Date().setDate(new Date().getDate() - 2));
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-15>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 0);
-    assert.equal(result[0].slots[1].nodes.length, 0);
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => `\n* repeating<${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)} +3d>`
+    }, defaults);
+    assert.equal(slots[0].length, 0);
+    assert.equal(slots[1].length, 1);
+    assert.equal(slots[1][0].TYPE, SearchItemType.STAMP);
   });
-  QUnit.test("deadline warning test 2", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* warning\nDEADLINE: <2018-07-18 -4d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
+  QUnit.test("inactive timestamp", (assert) => {
+    const date = new Date(new Date().setDate(new Date().getDate() + 1));
+    const slots = search([{
       "type": "agenda",
-      "start-date": "<2018-07-15>",
       "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[1].today = false;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.DL);
-    assert.equal(result[0].slots[0].nodes[0].offset, -3);
-    assert.equal(result[0].slots[1].nodes.length, 0);
-  });
-
-  QUnit.test("timestamp test 1", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* non-repeating<2018-07-16>", settings);
-    result = ORG.Searcher.search(nodes2, [{
-      "type": "agenda",
-      "start-date": "<2018-07-15>",
-      "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 0);
-    assert.equal(result[0].slots[1].nodes.length, 1);
-    assert.equal(result[0].slots[1].nodes[0].type, ORG.Searcher.itemTypes.STAMP);
-  });
-
-  QUnit.test("timestamp test 2", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org", "\n* repeating<2018-07-14 +2d>", settings);
-    result = ORG.Searcher.search(nodes2, [{
-      "type": "agenda",
-      "start-date": "<2018-07-15>",
-      "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-15").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, globOpts);
-    assert.equal(result[0].slots[0].nodes.length, 0);
-    assert.equal(result[0].slots[1].nodes.length, 1);
-    assert.equal(result[0].slots[1].nodes[0].type, ORG.Searcher.itemTypes.STAMP);
-  });
-
-  QUnit.test("timestamp test 3", function(assert) {
-    let nodes2 = ORG.Parser.parse("test.org",
-      "\n* inactive[2018-07-14]\n* inactive2[2018-07-15]",
-      $.extend({}, settings, {
-        "agenda-include-inactive-timestamps": true,
-      }));
-    result = ORG.Searcher.search(nodes2, [{
-      "type": "agenda",
-      "start-date": "<2018-07-14>",
-      "agenda-span": 2,
-    }], globOpts);
-    result.todayMl = new Date("2018-07-14").setHours(0, 0, 0, 0);
-    result[0].slots[0].today = true;
-    result[0].slots[0].nodes = [];
-    result[0].slots[1].nodes = [];
-    result = ORG.Searcher.search(nodes2, result, $.extend({}, settings, {
-      "agenda-include-inactive-timestamps": true,
+    }], {
+      "getFileNames": () => ["f"],
+      "getFile": () => `* inactive[${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)}]`
+    }, $.extend({}, defaults, {
+      "agenda-include-inactive-timestamps": 1,
     }));
-    assert.equal(result[0].slots[0].nodes.length, 1);
-    assert.equal(result[0].slots[0].nodes[0].id, 1);
-    assert.equal(result[0].slots[0].nodes[0].type, ORG.Searcher.itemTypes.ISTAMP);
-    assert.equal(result[0].slots[1].nodes.length, 1);
-    assert.equal(result[0].slots[1].nodes[0].id, 2);
-    assert.equal(result[0].slots[1].nodes[0].type, ORG.Searcher.itemTypes.ISTAMP);
+    assert.equal(slots[0].length, 0);
+    assert.equal(slots[1].length, 1);
+    assert.equal(slots[1][0].ID, 0);
+    assert.equal(slots[1][0].TYPE, SearchItemType.ISTAMP);
   });
 
-  QUnit.test("search time of a 1000 nodes file should be less than 0.1s", function(assert) {
+  QUnit.test("search time should be at least 30k nodes/sec @i7-6700HQ", (assert) => {
     var done = assert.async();
-    $.get("./lib/OrgParser.test.1000nodes.org", function(orgfile) {
-      let nodes = ORG.Parser.parse("test.org", orgfile, settings);
-      let t0 = performance.now();
-      ORG.Searcher.search(nodes, [{
-        type: "tags",
-        filter: "CATEGORY<>\"cat1\"+TODO<>\"DONE\"+TODO<>\"CANC\"+DEADLINE<\"<today>\"-SCHEDULED",
-      }], settings);
-      assert.lt(performance.now() - t0, 100); // not more than 0.1s/1000node
+    $.get("./OrgParser.test.1000nodes.org", (orgFileTxt) => {
+      const p0 = performance.now();
+      search([{
+        "type": "tags",
+        "filter": "CATEGORY<>\"cat1\"+TODO<>\"DONE\"+TODO<>\"CANC\"+DEADLINE<\"<today>\"-SCHEDULED",
+      }], {
+        "getFileNames": () => ["f"],
+        "getFile": () => orgFileTxt
+      }, defaults);
+      assert.ok(performance.now() - p0 <= 33.3333);
+      done();
+    }).fail(() => {
+      assert.ok(1);
       done();
     });
   });

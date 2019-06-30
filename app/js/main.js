@@ -62,6 +62,7 @@
     "OrgParser": null,
     "OrgSearcher": null,
     "OrgWriter": null,
-    "OrgSorter": null
+    "OrgSorter": null,
+    "OrgUtils": null
   };
 })();
