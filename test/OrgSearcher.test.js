@@ -632,9 +632,10 @@ SCHEDULED: <2018-0-15>`
     }], {"getFileNames": () => [""], "getFile": () => "\n* repeating\nSCHEDULED: <2018-07-01 +6d>"}, defaults);
     assert.equal(slots[0].length, 1);
     assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
-    assert.equal(slots[0][0].OFFSET, (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 6);
+    const offset = (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 6;
+    assert.equal(slots[0][0].OFFSET, offset);
 
-    assert.equal(slots[1].length, 0);
+    assert.equal(slots[1].length, offset === 5 ? 1 : 0);
   });
   QUnit.test("repeater 2", (assert) => {
     const slots = search([{
@@ -653,10 +654,10 @@ SCHEDULED: <2018-0-15>`
       "agenda-span": 4,
     }], {
       "getFileNames": () => ["f"],
-      "getFile": () => "\n* repeating\nSCHEDULED: <2019-04-04 +1m>"
+      "getFile": () => "\n* repeating\nSCHEDULED: <2019-04-06 +1m>"
     }, defaults);
     let prev;
-    const mlStart = new Date("2019-04-04").setHours(0, 0, 0, 0);
+    const mlStart = new Date("2019-04-06").setHours(0, 0, 0, 0);
     const mlEnd = new Date().setHours(0, 0, 0, 0);
 
     for (let timeSpan = new Date(mlStart).getMonth() + 1, cur = mlStart;
