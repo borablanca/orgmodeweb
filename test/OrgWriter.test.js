@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-
 const writeFile = ORG.Writer.writeFile;
 QUnit.module("OrgWriter Tests", () => {
   QUnit.test("should return empty string for non-array input", (assert) => {

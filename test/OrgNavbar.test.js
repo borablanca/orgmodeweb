@@ -1,32 +1,61 @@
-QUnit.module("OrgNavbar Tests", function(hooks) {
-  hooks.before(function() {
-    $("body").append("<div id='app' style='display:none;'></div>");
+const ICONTYPE = ORG.Icons.ICONTYPE;
+QUnit.module("OrgNavbar Tests", () => {
+  QUnit.test("empty bar", (assert) => {
+    assert.ok($("#qunit-fixture").orgNavbar().hasClass("orgNavbar"));
   });
-  hooks.after(function() {
-    $("#app").empty().off().remove();
+  QUnit.test("text icon", (assert) => {
+    const $bar = $("#qunit-fixture").orgNavbar({
+      "org": {"type": ICONTYPE.TEXT, "fn": ""}
+    });
+    const $icon = $bar.find(".orgicon");
+    assert.equal($icon.length, 1);
+    assert.equal($icon.text(), "org");
   });
 
-  QUnit.test("show empty navbar", function(assert) {
-    $("#app").orgNavbar();
-    assert.dom("#app.orgnavbar").exists();
-    assert.dom("#app.orgnavbar .orgicon.org").exists();
-    assert.dom("#app.orgnavbar div > span").doesNotExist();
+  QUnit.test("bar with a title", (assert) => {
+    const $bar = $("#qunit-fixture").orgNavbar({
+      "title": {"type": "Title"}
+    });
+    const $h1 = $bar.find("h1");
+    assert.equal($h1.length, 1);
+    assert.equal($h1.text(), "Title");
   });
-  QUnit.test("show only title", function(assert) {
-    $("#app").orgNavbar({title: "title"});
-    assert.dom("#app.orgnavbar").exists();
-    assert.dom("#app.orgnavbar .orgicon.org").exists();
-    assert.equal($("#app.orgnavbar > span").length, 1);
-    assert.equal($("#app.orgnavbar span i").length, 0);
-    assert.dom("#app.orgnavbar > span").hasText("title");
+  QUnit.test("bar with an icon button", (assert) => {
+    let done = false;
+    const $bar = $("#qunit-fixture").orgNavbar({
+      "org": {"type": ICONTYPE.ICON, "fn": () => done = true}
+    });
+    const $iconButton = $bar.find("svg.orgicon.org");
+    assert.equal($iconButton.length, 1);
+    $iconButton.click();
+    assert.ok(done);
   });
-  QUnit.test("show menu with title with add", function(assert) {
-    $("#app").orgNavbar({title: "title", add: function() { }});
-    assert.dom("#app.orgnavbar").exists();
-    assert.equal($("#app.orgnavbar > span").length, 1);
-    assert.dom("#app.orgnavbar > span").hasText("title");
-    assert.equal($("#app.orgnavbar .orgicon").length, 2);
-    assert.dom("#app.orgnavbar .orgicon.org").exists();
-    assert.dom("#app.orgnavbar .orgicon.add").exists();
+  QUnit.test("bar with button and title", (assert) => {
+    let done = false;
+    const $bar = $("#qunit-fixture").orgNavbar({
+      "org": {"type": ICONTYPE.ICON, "fn": () => done = true},
+      "title": {"type": "Title"}
+    });
+    let $barItem = $bar.find(".orgicon.org");
+    assert.equal($barItem.length, 1);
+    $barItem.click();
+    assert.ok(done);
+    $barItem = $barItem.next();
+    assert.ok($barItem.is("h1"));
+    assert.equal($barItem.text(), "Title");
+  });
+  QUnit.test("bar with title and button", (assert) => {
+    const $bar = $("#qunit-fixture").orgNavbar({
+      "title": {"type": "Title"},
+      "org": {"type": ICONTYPE.ICON, "fn": ""}
+    });
+    let barItem = $bar.find(".orgicon.org");
+    assert.equal(barItem.length, 1);
+    barItem = barItem.prev();
+    assert.ok(barItem.is("h1"));
+    assert.equal(barItem.text(), "Title");
+  });
+  QUnit.todo("bar with context icon", (assert) => {
+
   });
 });

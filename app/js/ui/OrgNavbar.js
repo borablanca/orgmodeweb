@@ -1,20 +1,21 @@
 (() => {
-  const init = ($container, opts) => {
-    return $container.on("click", ".orgicon", function() {
-      if ($(this).hasClass("org")) return ORG.route("#");
-      let opt = opts[this.classList[1]];
-      (opt.constructor === Array) ? $container.parent().orgContext(opt) :
-        (typeof opt === "function") ? opt() : ORG.route(opt || "#");
-      return false;
-    });
-  };
+  const {icon, textIcon, ICONTYPE} = ORG.Icons;
 
-  $.fn.orgNavbar = function(opts = {}) {
-    return init(this.addClass("orgnavbar").html(
-      `${ORG.icon("org")}
-      ${$.isMobile() ? ORG.icon("back") : ""}
-      <span>${opts.title || ""}</span>
-      ${Object.keys(opts).map((key) => ORG.icon(key)).join("")}`
-    ), Object.assign(opts, {back: () => history.back()}));
+  $.fn.orgNavbar = function (plan = {}) {
+    return this.addClass("orgNavbar").append(
+      Object.keys(plan)
+        .map((name) => name === "title" ?
+          `<h1 class="nowrap">${plan.title.type}</h1>` :
+          (plan[name].type === ICONTYPE.ICON ? icon : textIcon)(
+            name,
+            plan[name].opts
+          )
+        ))
+      .on("click", ".orgicon", function () {
+        const fn = plan[this.classList[1]].fn;
+        return fn ?
+          $.isFunction(fn) ? fn() : ORG.route(fn) :
+          false;
+      });
   };
 })();
