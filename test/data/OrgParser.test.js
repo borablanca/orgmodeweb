@@ -110,9 +110,7 @@ log1
 :LOGBOOK:
 * body text starting with star
 *body text`;
-  const parseFile = ORG.Parser.parseFile;
-  const parseLinks = ORG.Parser.parseLinks;
-  const parseTimestamp = ORG.Parser.parseTimestamp;
+  const {parseFile, parseLinks, parseTimestamp} = ORG.Parser;
   const defaults = ORG.defaults;
 
   QUnit.test("null file", (assert) => {
