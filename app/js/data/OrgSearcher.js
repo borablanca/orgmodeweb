@@ -134,7 +134,11 @@
     let curSegmentNegativeStr = "";
     let curSegmentREStr = "";
 
-    for (let part = 0, npart = curSegmentParts.length, rule; part < npart;) { // strip parts of AND matches (+, -)
+    // strip parts of AND matches (+, -)
+    for (
+      let part = 0, npart = curSegmentParts.length, rule;
+      part < npart;
+    ) {
       rule = andRule(curSegmentParts[part++], matchings);
       if ($.isPlainObject(rule)) {
         if (rule.type === "negative") curSegmentNegativeStr += rule.rule;
@@ -208,7 +212,14 @@
     if (slot.type !== "agenda" && !slot.re && !nrules) {
       return false;
     }
-    if (!slot.re || slot.re.test(searchNode.TITLE + searchNode.TEXT.join("") + Object.values(searchNode.PROPS).join(""))) {
+    if (
+      !slot.re ||
+      slot.re.test(
+        searchNode.TITLE +
+        searchNode.TEXT.join("") +
+        Object.values(searchNode.PROPS).join("")
+      )
+    ) {
       if (!nrules) return true;
       for (let ruleIdx = 0, rule, reTest, fnTest; ruleIdx < nrules;) {
         rule = slot.rules[ruleIdx++];
@@ -236,7 +247,10 @@
       "ranges": []
     };
 
-    if (slot.type === "agenda" && (!slot.rules.length || matchRules(slot, searchNode, globOpts))) {
+    if (
+      slot.type === "agenda" &&
+      (!slot.rules.length || matchRules(slot, searchNode, globOpts))
+    ) {
       sml = slot.ml;
       if (curStmp = searchNode.DEADLINE) { // DEADLINE exists
         ml = curStmp.ml;
@@ -348,16 +362,22 @@
       const parseFile = ORG.Parser.parseFile;
       const {slots, activeFileNames} = generateSlots(searchPlan, fileProvider.getFileNames(), opts);
 
-      for (let fileIdx = 0, nfiles = activeFileNames.length, fileName, headings, todoSeperatorIdx; fileIdx < nfiles;) {
+      for (
+        let fileIdx = 0, nfiles = activeFileNames.length, fileName, headings, todoSeperatorIdx;
+        fileIdx < nfiles;
+      ) {
         fileName = activeFileNames[fileIdx++];
         headings = parseFile(fileName, fileProvider.getFile(fileName), opts);
         todoSeperatorIdx = headings.TODO.indexOf("|");
 
-        for (let nodeIdx = 0, nnodes = headings.length, fid = headings.FILENAME, lvl, todoIdx, searchNode, heading,
-          categoryStack = [{"lvl": 0, "cat": headings.CATEGORY || fid}],
-          tagStack = [{"lvl": 0, "tag": ""}];
+        for (
+          let nodeIdx = 0, nnodes = headings.length, fid = headings.FILENAME,
+            lvl, todoIdx, searchNode, heading,
+            categoryStack = [{"lvl": 0, "cat": headings.CATEGORY || fid}],
+            tagStack = [{"lvl": 0, "tag": ""}];
           nodeIdx < nnodes;
-          nodeIdx++) {
+          nodeIdx++
+        ) {
           heading = headings[nodeIdx];
           lvl = heading.LVL;
           todoIdx = heading.TODO ? headings.TODO.indexOf(heading.TODO) : -1;

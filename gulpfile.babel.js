@@ -53,8 +53,8 @@ gulp.task("styles", () =>
 gulp.task("scripts", () => gulp.src(
   [
     "./app/js/lib/jquery.hotkeys.js",
-    "./app/js/utils.js",
     "./app/js/main.js",
+    "./app/js/utils.js",
     "./app/js/ui/OrgCalendar.js",
     "./app/js/data/OrgDefaults.js",
     "./app/js/data/OrgParser.js",
@@ -115,28 +115,6 @@ gulp.task("html", () => gulp.src("app/**/*.html")
 
 gulp.task("clean", () => del([".tmp", "dist/*", "!dist/.git"], { dot: true }));
 
-gulp.task("reload", (done) => {
-  browserSync.reload();
-  done();
-});
-
-gulp.task("serve", gulp.series("scripts", "styles", (done) => {
-  browserSync.init({
-    notify: false,
-    logPrefix: "ORG",
-    // Allow scroll syncing across breakpoints
-    scrollElementMapping: ["main"],
-    // https: true,
-    server: [".tmp", "app"],
-    port: 3000
-  });
-  gulp.watch("app/**/*.html", gulp.series("reload"));
-  gulp.watch("app/css/**/*.css", gulp.series("styles", "reload"));
-  gulp.watch("app/js/**/*.js", gulp.series("scripts", "reload"));
-  gulp.watch("app/img/**/*", gulp.series("reload"));
-  done();
-}));
-
 // Copy over the scripts that are used in importScripts as part of the generate-service-worker task.
 gulp.task("copy-sw-scripts", () => gulp.src(
   [
@@ -185,7 +163,7 @@ gulp.task("default", gulp.series(
 ), cb => cb());
 
 gulp.task("serve:dist", gulp.series("default"), () =>
-  browserSync({
+  browserSync.create().init({
     notify: false,
     logPrefix: "ORG",
     // Allow scroll syncing across breakpoints
@@ -196,9 +174,31 @@ gulp.task("serve:dist", gulp.series("default"), () =>
   })
 );
 
+gulp.task("reload", (done) => {
+  browserSync.reload();
+  done();
+});
+
+gulp.task("serve", gulp.series("scripts", "styles", (done) => {
+  browserSync.create().init({
+    notify: false,
+    logPrefix: "ORG",
+    // Allow scroll syncing across breakpoints
+    scrollElementMapping: ["main"],
+    // https: true,
+    server: [".tmp", "app"],
+    port: 3000
+  });
+  gulp.watch("app/**/*.html", gulp.series("reload"));
+  gulp.watch("app/css/**/*.css", gulp.series("styles", "reload"));
+  gulp.watch("app/js/**/*.js", gulp.series("scripts", "reload"));
+  gulp.watch("app/img/**/*", gulp.series("reload"));
+  done();
+}));
+
 gulp.task("test", (done) => {
   browserSync.create().init({
-    files: ["test/*.test.js", "app/js/**/*.js"],
+    files: ["test/**/*.test.js", "app/js/**/*.js"],
     notify: true,
     logPrefix: "ORG_TEST",
     server: ".",

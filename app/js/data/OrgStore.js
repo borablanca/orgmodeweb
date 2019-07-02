@@ -1,136 +1,171 @@
 (() => {
-  const parseFile = ORG.Parser.parseFile;
-  const writeFile = ORG.Writer.writeFile;
   const FilePrefix = "__orgfiles__";
   const SyncStatus = {
     "SYNC": 0,
     "MODIFIED": 1,
     "CONFLICT": 2,
   };
-  const exists = (key) => Object.prototype.hasOwnProperty.call(localStorage, key);
+  const SyncType = {
+    "LOCAL": 0,
+    "DBOX": 1
+  };
+  const genId = () => "_" + Math.random().toString(36).substr(2, 9);
   const get = (key) => localStorage.getItem(key);
   const set = (key, _val) => localStorage.setItem(key, _val);
   const del = (key) => localStorage.removeItem(key);
-  const fileExists = (file) => file && exists(
-    FilePrefix + ($.isPlainObject(file) ? file.name : file)
-  );
+
   const saveFileNames = (fileNamesObj) => set(
     FilePrefix,
     JSON.stringify(fileNamesObj)
   );
 
   const getFileList = () => {
+    const fileListStr = get(FilePrefix);
+
+    if (!ORG.Utils.isString(fileListStr)) {
+      return [];
+    }
     try {
-      const files = JSON.parse(get(FilePrefix));
-      return $.isPlainObject(files) ? Object.keys(files).map((file) => {
-        const fileObj = files[file];
-        return {
-          "name": file,
-          "dbox": fileObj.dbox,
-          "dml": fileObj.dml,
-          "sync": fileObj.sync
-        };
-      }) : $.isArray(files) ? files : [];
+      return JSON.parse(fileListStr);
     } catch (exception) {
       return [];
     }
   };
 
-  const createFile = (file, nodes) => {
-    if (fileExists(file)) {
-      throw "There is a file with same name!";
-    }
-    const fileList = getFileList();
-    fileList.push(file);
-    saveFileNames(fileList);
-    set(FilePrefix + file.name, writeFile(nodes));
-    return true;
-  };
-
-  const updateFile = (file, nodes, oldFile) => {
-    const fileNames = getFileList();
-    const oldFileName = $.isPlainObject(oldFile) ?
-      oldFile.name :
-      oldFile;
-    const fileNameChanged = file.name !== oldFileName;
-
-    for (let fileIdx = 0, nfiles = fileNames.length;
+  const fileExists = (name, syncType = SyncType.LOCAL, syncPath = "") => {
+    for (
+      let fileIdx = 0, fileList = getFileList(), nfiles = fileList.length, type, file;
       fileIdx < nfiles;
-      fileIdx++) {
-      if (fileNames[fileIdx].name === oldFileName) {
-        if (Object.prototype.hasOwnProperty.call(file, "sync")) {
-          file.sync = SyncStatus.MODIFIED;
-        }
-        fileNames[fileIdx] = file;
-        saveFileNames(fileNames);
-        if (nodes || fileNameChanged) {
-          set(
-            FilePrefix + file.name,
-            nodes ?
-              writeFile(nodes) :
-              get(FilePrefix + oldFileName)
-          );
-
-          if (fileNameChanged) {
-            del(FilePrefix + oldFileName);
-          }
-        }
+      fileIdx++
+    ) {
+      file = fileList[fileIdx];
+      type = file.sync.type;
+      if (
+        file.name === name &&
+        type === syncType &&
+        (type === SyncType.LOCAL || file.sync.path === syncPath)
+      ) {
         return true;
       }
     }
-    throw "File not found";
+    return false;
   };
 
+  /** Update current files in store */
+  (() => {
+    const curFiles = getFileList();
+
+    if ($.isPlainObject(curFiles)) {
+      const files = Object.keys(curFiles).map((oldFileName) => {
+        const oldFileObj = curFiles[oldFileName];
+        const id = genId();
+        const newFileObj = {
+          "id": id,
+          "name": oldFileName,
+          "dml": oldFileObj.dml, // last modified time
+          "sync": {
+            "stat": oldFileObj.sync, // sync state
+            "type": oldFileObj.dbox ? SyncType.DBOX : SyncType.LOCAL, // sync type
+            "path": oldFileObj.dbox || "" // sync path
+          }
+        };
+        set(FilePrefix + id, get(FilePrefix + oldFileName));
+        del(FilePrefix + oldFileName);
+        return newFileObj;
+      });
+      saveFileNames(files);
+    }
+  })();
+
   ORG.Store = {
-    "deleteToken": (tokenType) => {
-      del(tokenType);
-      return true;
+    "Tokens": {
+      "Dropbox": "__dbxtkn__",
+      "Settings": "__orgsettings__",
     },
+    getFileList,
+    SyncStatus,
+    SyncType,
     "getToken": (tokenType) => get(tokenType),
-    "setToken": (tokenType, tokenValue) => tokenType && set(tokenType, tokenValue),
-
-    fileExists,
-    "deleteFile": (file) => {
-      const fileNames = getFileList();
-      const fileName = $.isPlainObject(file) ? file.name : file;
-
-      for (let fileCounter = 0, nfiles = fileNames.length; fileCounter < nfiles; fileCounter++) {
-        if (fileNames[fileCounter].name === fileName) {
-          fileNames.splice(fileCounter, 1);
-          saveFileNames(fileNames);
-          del(FilePrefix + fileName);
-          return true;
+    "updateFile": (file, nodes) => {
+      if (!file || !file.id || !ORG.Utils.isString(localStorage[FilePrefix + file.id])) {
+        throw "Unknown file";
+      }
+      for (
+        let fileIdx = 0, fileList = getFileList(), nfiles = fileList.length, fileId = file.id;
+        fileIdx < nfiles;
+        fileIdx++
+      ) {
+        if (fileList[fileIdx].id === fileId) {
+          fileList[fileIdx] = file;
+          saveFileNames(fileList);
+          if (nodes) {
+            set(FilePrefix + fileId, ORG.Writer.writeFile(nodes));
+          }
+          return file;
         }
       }
       throw "File not found";
     },
-    "saveFile": (file, nodes, oldFile) => {
-      if (!file) throw "Unknown file";
-      if (!file.name) throw "File name cannot be empty";
-      if (file.name.match(/[\\/:*?"<>]/)) throw "File name contains illegal characters";
-      return (oldFile ? updateFile : createFile)(file, nodes, oldFile);
+    "setToken": (tokenType, tokenValue) => tokenType && set(tokenType, tokenValue),
+    fileExists,
+    "createFile": (name, syncType = SyncType.LOCAL, syncPath = "", nodes = []) => {
+      if (!name) throw "File name cannot be empty";
+      if (name.match(/[\\/:*?"<>]/)) throw "File name contains illegal characters";
+      if (fileExists(name, syncType, syncPath)) {
+        throw "There is a file with same name";
+      }
+      const fileList = getFileList();
+      let id = genId();
+
+      while (ORG.Utils.isString(localStorage[FilePrefix + id])) {
+        id = genId();
+      }
+      const file = {
+        id,
+        name,
+        "dml": new Date().getTime(),
+        "sync": {
+          "stat": SyncStatus.SYNC,
+          "type": syncType,
+          "path": syncPath
+        }
+      };
+      fileList.push(file);
+      saveFileNames(fileList);
+      set(FilePrefix + id, ORG.Writer.writeFile(nodes));
+      return file;
     },
-    "getFileHeadings": (file, settings) => file && fileExists(file.name) ?
-      parseFile(file.name, get(FilePrefix + file.name), settings) :
-      null,
-    "getFile": (fileName) => {
+    "getFileHeadings": (file = {}, settings) => file.id && fileExists(file.name, file.sync.type, file.sync.path) ?
+      ORG.Parser.parseFile(
+        file.name,
+        get(FilePrefix + (ORG.Utils.isString(file) ? file : file.id)),
+        settings
+      ) : null,
+    "getFile": (file) => {
+      if (!file || !file.id) throw "Unknown file";
       const fileList = JSON.parse(get(FilePrefix));
 
-      for (let fileCounter = 0, nfiles = fileList.length; fileCounter < nfiles; fileCounter++) {
-        if (fileList[fileCounter].name === fileName) {
+      for (
+        let fileCounter = 0, nfiles = fileList.length, id = file.id;
+        fileCounter < nfiles;
+        fileCounter++
+      ) {
+        if (fileList[fileCounter].name === id) {
           return fileList[fileCounter];
         }
       }
       throw "File not found";
     },
-    "getFileContents": (file) => get(FilePrefix + file.name),
-    getFileList,
+    "getFileContents": (file) => !file || !file.id ? null : get(FilePrefix + file.id),
     "setFileProperty": (file, propertyObj) => {
       const fileNames = getFileList();
-      const fileName = $.isPlainObject(file) ? file.name : file;
 
-      for (let fileIdx = 0, nfiles = fileNames.length; fileIdx < nfiles; fileIdx++) {
-        if (fileNames[fileIdx].name === fileName) {
+      for (
+        let fileIdx = 0, nfiles = fileNames.length, id = $.isPlainObject(file) ? file.id : file;
+        fileIdx < nfiles;
+        fileIdx++
+      ) {
+        if (fileNames[fileIdx].id === id) {
           Object.assign(fileNames[fileIdx], propertyObj);
           saveFileNames(fileNames);
           return true;
@@ -138,10 +173,23 @@
       }
       throw "File not found";
     },
-    SyncStatus,
-    "Tokens": {
-      "Dropbox": "__dbxtkn__",
-      "Settings": "__orgsettings__",
+    "deleteFile": (file) => {
+      const fileNames = getFileList();
+      const fileId = $.isPlainObject(file) ? file.id : file;
+
+      for (let fileCounter = 0, nfiles = fileNames.length; fileCounter < nfiles; fileCounter++) {
+        if (fileNames[fileCounter].id === fileId) {
+          fileNames.splice(fileCounter, 1);
+          saveFileNames(fileNames);
+          del(FilePrefix + fileId);
+          return true;
+        }
+      }
+      throw "File not found";
+    },
+    "deleteToken": (tokenType) => {
+      del(tokenType);
+      return true;
     }
   };
 })();

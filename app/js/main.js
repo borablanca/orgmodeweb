@@ -59,10 +59,12 @@
       }).catch(() => $("body").orgNotify("Error during service worker registration"));
   }
   return window.ORG = {
-    "OrgParser": null,
-    "OrgSearcher": null,
-    "OrgWriter": null,
-    "OrgSorter": null,
-    "OrgUtils": null
+    "route": null,
+    "Icons": null,
+    "Parser": null,
+    "Searcher": null,
+    "Writer": null,
+    "Sorter": null,
+    "Utils": null
   };
 })();

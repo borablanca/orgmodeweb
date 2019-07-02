@@ -3,3 +3,4 @@ dist/
 .tmp
 test/lib
 package-lock.json
+test/**/*.org

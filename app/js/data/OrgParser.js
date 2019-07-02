@@ -52,7 +52,10 @@
   const updateInBufferSettings = (headings, bufferText = "") => {
     const matches = bufferText.match(SettingGRE) || [];
 
-    for (let settingIdx = 0, nsettings = matches.length, match, setting; settingIdx < nsettings;) {
+    for (
+      let settingIdx = 0, nsettings = matches.length, match, setting;
+      settingIdx < nsettings;
+    ) {
       match = matches[settingIdx++].match(SettingRE);
       setting = match[1];
       if (setting === "SEQ_TODO" || setting === "TYP_TODO") {
@@ -83,7 +86,10 @@
       if (!/^\*+ /.test(rawHeadings[headingIdx])) {
         headings.TEXT = rawHeadings[headingIdx++];
       }
-      for (let nheadings = rawHeadings.length, heading, headingLines, matches; headingIdx < nheadings;) {
+      for (
+        let nheadings = rawHeadings.length, heading, headingLines, matches;
+        headingIdx < nheadings;
+      ) {
         headingLines = rawHeadings[headingIdx++].split(/\n/);
         matches = headingLines[0].match(orgHeadingRE);
         heading = {
@@ -100,18 +106,27 @@
           "STMPS": [],
           "ISTMPS": [],
         };
-        for (let lineIdx = 1, nlines = headingLines.length, line, field, lineMatches; lineIdx < nlines;) {
+        for (
+          let lineIdx = 1, nlines = headingLines.length, line, field, lineMatches;
+          lineIdx < nlines;
+        ) {
           line = headingLines[lineIdx++];
           if (AgendaTimestampGRE.test(line)) { // CLOSED|SCHEDULED|DEADLINE
             lineMatches = line.match(AgendaTimestampGRE);
-            for (let matchIdx = 0, nmatches = lineMatches.length, match; matchIdx < nmatches;) {
+            for (
+              let matchIdx = 0, nmatches = lineMatches.length, match;
+              matchIdx < nmatches;
+            ) {
               match = lineMatches[matchIdx++].match(AgendaTimestampRE);
               field = match[1];
               heading[field] = createTimestamp(match.slice(1));
               if (heading[field].n) heading.STMPS.push(heading[field]); // eslint-disable-line max-depth
             }
           } else if (DrawerStartRE.test(line)) { // PROPERTY DRAWER
-            while (typeof (line = headingLines[lineIdx++]) === "string" && !DrawerEndRE.test(line)) {
+            while (
+              typeof (line = headingLines[lineIdx++]) === "string" &&
+              !DrawerEndRE.test(line)
+            ) {
               if (lineMatches = line.match(DrawerPropertyRE)) { // eslint-disable-line max-depth
                 heading.PROPS[lineMatches[1].toUpperCase()] = lineMatches[2].trim();
               } else {
