@@ -1,0 +1,41 @@
+{
+  "extends": "stylelint-config-recommended",
+  "rules": {
+    "color-hex-length": "short",
+    "comment-empty-line-before": [
+      "always",
+      {
+        "ignore": [
+          "stylelint-commands",
+          "after-comment"
+        ]
+      }
+    ],
+    "declaration-colon-space-after": "always",
+    "font-family-name-quotes": "always-where-required",
+    "font-weight-notation": "named-where-possible",
+    "indentation": 2,
+    "length-zero-no-unit": true,
+    "linebreaks": "unix",
+    "max-empty-lines": 2,
+    "media-feature-name-no-unknown": true,
+    "media-feature-name-no-vendor-prefix": true,
+    "no-empty-first-line": true,
+    "no-eol-whitespace": true,
+    "no-missing-end-of-source-newline": true,
+    "no-unknown-animations": true,
+    "property-case": "lower",
+    "property-no-vendor-prefix": true,
+    "rule-empty-line-before": "never",
+    "selector-attribute-quotes": "always",
+    "selector-max-class": 3,
+    "selector-max-id": 1,
+    "unit-whitelist": [
+      "px",
+      "fr",
+      "s",
+      "vh",
+      "%"
+    ]
+  }
+}

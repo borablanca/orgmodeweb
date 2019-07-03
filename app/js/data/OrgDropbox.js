@@ -1,118 +1,131 @@
 (() => {
-  const tokenPrefix = "__dbxtkn__";
-  const SYNC_STATUS = {
-    SYNC: 0,
-    MODIFIED: 1,
-    CONFLICT: 2,
-  };
+  const store = ORG.Store;
+  const SyncStatus = store.SyncStatus;
+  const ConnectionError = "Failed to connect to Dropbox";
+  const NotLinkedError = "You haven't linked to Dropbox!";
+  const UnknownPathError = "Can't sync file";
+  const AuthorizationError = "Unauthorized Dropbox account!";
+
+  ((match) => {
+    if (match) {
+      store.setToken(store.Tokens.Dropbox, match[1]);
+      $("body").orgNotify({"message": "Dropbox account added successfully"});
+    }
+  })(location.hash.match(/access_token=([^&]*)/));
 
   const getDropbox = () => {
-    let token = ORG.Store.store(tokenPrefix);
-    if (token) return new Dropbox.Dropbox({accessToken: token});
-    location.href = new Dropbox.Dropbox({clientId: "h3xyb8gqqxvounb"})
-      .getAuthenticationUrl("https://orgmodeweb.org/");
+    const token = store.getToken(store.Tokens.Dropbox);
+    if (token) return new Dropbox.Dropbox({"accessToken": token});
+    location.href = new Dropbox.Dropbox({"clientId": "h3xyb8gqqxvounb"}).getAuthenticationUrl("http://localhost:3000");
     return null;
   };
 
-  ORG.Dropbox = {
-    SYNC: SYNC_STATUS,
 
-    // filePath : path on dropbox eg: /emacs/orgfiles/
-    // fileName : name of the file with extension eg: file.org
-    // cb       : callback function after fetching file from dropbox
-    // err      : error function if error occurs during fetch
-    // sync     : if true sync existing fileName, else fetching new file
-    getFile: function(filePath, fileName, cb, err, sync) {
-      let dbox = getDropbox();
-      if (dbox) {
-        dbox.filesDownload({path: filePath}).then((data) => {
-          let reader = new FileReader();
-          reader.addEventListener("loadend", (e) => {
-            const text = e.target.result;
-            try {
-              ORG.Store.setFile(fileName, ORG.Parser.parse(fileName, text, ORG.Settings.getSettings()), sync ? fileName : "")
-                .setFileProperty(fileName, {
-                  dbox: filePath,
-                  dml: new Date(data.server_modified).getTime(), // last dropbox timestamp
-                  sync: SYNC_STATUS.SYNC,
-                });
-              cb(SYNC_STATUS.SYNC);
-            } catch (e) {
-              err && err(e);
-            }
-          });
-          reader.readAsText(data.fileBlob);
-        }).catch(() => err && err());
-      }
-      return this;
-    },
-
-    listFiles: function(path, cursor, fn, err) {
-      let dbox = getDropbox();
-      dbox && (cursor ? dbox.filesListFolderContinue({cursor: cursor}) :
-        dbox.filesListFolder({path: path, include_media_info: true})).then(fn)
-        .catch((e) => {
-          if (e.status === 401) {
-            ORG.Dropbox.unlink().route("#");
-            $("body").orgNotify("Unauthorized Dropbox account");
-          }
-          return err && err();
-        });
-      return this;
-    },
-
-    setDropbox: function() {
-      let match = location.hash.match(/access_token=([^&]*)/);
-      if (match) {
-        ORG.Store.store(tokenPrefix, match[1]);
-        $("body").orgNotify("Dropbox account added successfully");
-      }
-      return this;
-    },
-
-    setFile: function(fileName, fileData, fileContents, cb, err) {
-      let dbox = getDropbox();
-      if (dbox) {
-        dbox.filesUpload({
-          path: fileData.dbox,
-          contents: fileContents,
-          mode: {".tag": "overwrite"},
-          autorename: true,
-        }).then((metadata) => {
-          ORG.Store.setFileProperty(fileName, {
-            dml: new Date(metadata.server_modified).getTime(),
-            sync: SYNC_STATUS.SYNC,
-          });
-          cb(SYNC_STATUS.SYNC);
-        }).catch(() => err && err());
-      }
-      return this;
-    },
-
-    syncFile: function(fileName, fileData, cb, err) {
-      let dbox = getDropbox();
-      if (dbox && fileData.dbox) { // both ORG and the file are linked to dropbox
-        dbox.filesGetMetadata({path: fileData.dbox}).then((data) => {
-          let modifiedDate = new Date(data.server_modified).getTime();
-          if (modifiedDate > fileData.dml) { // dbox file is changed
-            if (fileData.sync) { // also client file is changed or conflicted
-              ORG.Store.setFileProperty(fileName, {sync: SYNC_STATUS.CONFLICT});
-              cb(SYNC_STATUS.CONFLICT);
-            } else { // update local file
-              this.getFile(fileData.dbox, fileName, cb, err, true);
-            }
-          } else if (fileData.sync === SYNC_STATUS.MODIFIED) { // client file is changed
-            this.setFile(fileName, fileData, ORG.Store.getFileContents(fileName), cb, err);
-          } else cb(SYNC_STATUS.SYNC);
-        }).catch(() => err());
-      }
-      return this;
-    },
-
-    unlink: function() {
-      delete window.localStorage[tokenPrefix];
-      return ORG;
-    },
+  /**
+   *
+   * @param {string} filePath path of the file in dropbox
+   * @param {function} successFn callback fn to call after getting the file
+   * @param {function} failFn error fn to call if error occurs
+   */
+  const fetchFile = (filePath, successFn, failFn) => {
+    if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
+    const dbox = getDropbox();
+    if (!dbox) return failFn(NotLinkedError);
+    return dbox.filesDownload({"path": filePath}).then((metadata) => {
+      const reader = new FileReader();
+      reader.addEventListener("loadend", (loadEndObj) => successFn(loadEndObj.target.result, metadata));
+      reader.readAsText(metadata.fileBlob);
+    }).catch(() => failFn(ConnectionError));
   };
-  ORG.Dropbox.setDropbox();
+
+  /**
+   *
+   * @param {*} filePath path of the file in dropbox
+   * @param {*} fileText file contents
+   * @param {*} successFn callback fn to call after fetching file list from dropbox
+   * @param {*} failFn error fn to call if error occurs
+   */
+  const uploadFile = (filePath, fileText, successFn, failFn) => {
+    if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
+    const dbox = getDropbox();
+    if (!dbox) return failFn(NotLinkedError);
+    return dbox.filesUpload({
+      "path": filePath,
+      "contents": fileText,
+      "mode": {".tag": "overwrite"},
+      "autorename": true,
+    }).then(successFn)
+      .catch(() => failFn(ConnectionError));
+  };
+
+  ORG.Dropbox = {
+    fetchFile,
+
+    /**
+     *
+     * @param {string} folderPath dropbox folder to list files from
+     * @param {cursor} cursor dropbox cursor returned if more folders exists in dropbox
+     * @param {function} successFn callback fn to call after fetching file list from dropbox
+     * @param {function} failFn error fn to call if error occurs
+     */
+    "getFileList": (folderPath, cursor, successFn, failFn) => { // eslint-disable-line consistent-return
+      if (!ORG.Utils.isString(folderPath)) return failFn(UnknownPathError);
+      const dbox = getDropbox();
+      if (!dbox) return failFn(NotLinkedError);
+      (cursor ? dbox.filesListFolderContinue({"cursor": cursor}) : dbox.filesListFolder({"path": folderPath, "include_media_info": true}))
+        .then(successFn)
+        .catch((exception) => {
+          if (exception.status === 401) {
+            ORG.Dropbox.unlink();
+            ORG.route("#");
+            failFn(AuthorizationError);
+          } else failFn(ConnectionError);
+        });
+    },
+
+    /**
+     *
+     * @param {object} file local metadata of file
+     * @param {function} successFn callback fn to call after checking sync status of file
+     * @param {function} failFn error fn to call if error occurs
+     */
+    "syncFile": (file, successFn, failFn) => {
+      if (file.sync.type !== ORG.Store.SyncType.DBOX) return failFn(NotLinkedError);
+      const dbox = getDropbox();
+      if (!dbox) return failFn(NotLinkedError);
+      return dbox.filesGetMetadata({"path": file.sync.path}).then((fileMetaData) => {
+        const modifiedDate = new Date(fileMetaData.server_modified).getTime();
+
+        const fetchSuccessFn = (text, metadata) => {
+          file.dml = new Date(metadata.server_modified).getTime();
+          file.sync.stat = SyncStatus.SYNC;
+          ORG.Store.updateFile(file, ORG.Parser.parseFile(file.name, text, ORG.Settings.getSettingsObj()));
+          successFn(SyncStatus.SYNC);
+        };
+
+        if (modifiedDate > file.dml) { // dbox file is changed
+          if (file.sync.stat) { // also client file is changed or conflicted
+            successFn(SyncStatus.CONFLICT);
+          } else { // update local file
+            fetchFile(file.sync.path, fetchSuccessFn, failFn);
+          }
+        } else if (file.sync === SyncStatus.MODIFIED) { // client file is changed
+          uploadFile(
+            file.sync.path,
+            ORG.Store.getFileContents(file),
+            (metadata) => {
+              file.dml = new Date(metadata.server_modified).getTime();
+              file.sync.stat = SyncStatus.SYNC;
+              ORG.Store.updateFile(file);
+              successFn(SyncStatus.SYNC);
+            },
+            failFn
+          );
+        } else {
+          fetchFile(file.sync.path, fetchSuccessFn, failFn);
+        }
+      }).catch(() => failFn(UnknownPathError + " \"" + file.name + "\""));
+    },
+    "unlink": () => store.deleteToken(store.Tokens.Dropbox)
+  };
 })();

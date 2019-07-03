@@ -4,6 +4,7 @@
     "SYNC": 0,
     "MODIFIED": 1,
     "CONFLICT": 2,
+    "INSYNC": 3,
   };
   const SyncType = {
     "LOCAL": 0,
@@ -41,9 +42,8 @@
       file = fileList[fileIdx];
       type = file.sync.type;
       if (
-        file.name === name &&
-        type === syncType &&
-        (type === SyncType.LOCAL || file.sync.path === syncPath)
+        syncType === SyncType.LOCAL && file.name === name ||
+        syncType === SyncType.DBOX && type === syncType && file.sync.path === syncPath
       ) {
         return true;
       }
@@ -112,7 +112,7 @@
       if (!name) throw "File name cannot be empty";
       if (name.match(/[\\/:*?"<>]/)) throw "File name contains illegal characters";
       if (fileExists(name, syncType, syncPath)) {
-        throw "There is a file with same name";
+        throw `There is a file with same name${syncType === SyncType.DBOX ? " and dropbox path" : ""}`;
       }
       const fileList = getFileList();
       let id = genId();

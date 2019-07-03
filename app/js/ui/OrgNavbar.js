@@ -2,7 +2,7 @@
   const {icon, textIcon, ICONTYPE} = ORG.Icons;
 
   $.fn.orgNavbar = function (plan = {}) {
-    return this.addClass("orgNavbar").append(
+    return this.addClass("orgnavbar").append(
       Object.keys(plan)
         .map((name) => name === "title" ?
           `<h1 class="nowrap">${plan.title.type}</h1>` :

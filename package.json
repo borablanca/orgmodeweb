@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "jquery": "^3.4.1"
+    "jquery": "^3.4.1",
+    "normalize.css": "^8.0.1"
   },
   "deprecated": false,
   "description": "web application for org-mode",
@@ -10,7 +11,7 @@
     "@babel/register": "^7.4.4",
     "apache-server-configs": "^3.2.1",
     "browser-sync": "^2.26.7",
-    "del": "^4.1.1",
+    "del": "^5.0.0",
     "eslint": "^6.0.1",
     "gulp": "^4.0.2",
     "gulp-autoprefixer": "^6.1.0",
@@ -23,13 +24,12 @@
     "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^2.0.2",
     "gulp-imagemin": "^6.0.0",
-    "gulp-load-plugins": "^1.6.0",
+    "gulp-load-plugins": "^2.0.0",
     "gulp-newer": "^1.4.0",
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
     "gulp-useref": "^3.1.6",
-    "normalize.css": "^8.0.1",
     "psi": "^3.1.0",
     "qunit": "^2.9.2",
     "stylelint-config-recommended": "^2.2.0",

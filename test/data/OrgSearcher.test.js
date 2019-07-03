@@ -670,9 +670,10 @@ SCHEDULED: <2018-0-15>`
     assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
     assert.equal(slots[0][0].OFFSET, (mlEnd - prev) / DAY);
 
-    assert.equal(slots[1].length, 0);
-    assert.equal(slots[2].length, 0);
-    assert.equal(slots[3].length, 0);
+    const day = new Date().getDate();
+    assert.equal(slots[1].length, day === 5 ? 1 : 0);
+    assert.equal(slots[2].length, day === 4 ? 1 : 0);
+    assert.equal(slots[3].length, day === 3 ? 1 : 0);
   });
   QUnit.test("repeater 4", (assert) => {
     const slots = search([{

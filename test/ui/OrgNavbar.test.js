@@ -1,7 +1,7 @@
 const ICONTYPE = ORG.Icons.ICONTYPE;
 QUnit.module("OrgNavbar Tests", () => {
   QUnit.test("empty bar", (assert) => {
-    assert.ok($("#qunit-fixture").orgNavbar().hasClass("orgNavbar"));
+    assert.ok($("#qunit-fixture").orgNavbar().hasClass("orgnavbar"));
   });
   QUnit.test("text icon", (assert) => {
     const $bar = $("#qunit-fixture").orgNavbar({

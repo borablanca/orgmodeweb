@@ -1,5 +1,5 @@
 (() => {
-  const defaultOpts = {"color": "#eee", "size": 30};
+  const defaultOpts = {"color": "#eee", "size": 45};
   const icons = {
     "add": ["0 0 24 24", "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"],
     "back": ["-5 -2 26 26", "M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"],

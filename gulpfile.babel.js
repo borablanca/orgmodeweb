@@ -37,10 +37,11 @@ gulp.task("copy", () =>
 
 gulp.task("styles", () =>
   gulp.src([
+    "node_modules/normalize.css/normalize.css",
     "app/css/*.css"
   ])
-    .pipe($.newer(".tmp/css"))
-    .pipe($.autoprefixer({ browsers: ['last 5 versions'] }))
+    .pipe($.concat("main.css"))
+    .pipe($.autoprefixer({ Browserslist: ['last 5 versions'] }))
     .pipe(gulp.dest(".tmp/css"))
     .pipe($.if("*.css", $.cssnano()))
     .pipe($.size({ title: "styles" }))
@@ -180,7 +181,7 @@ gulp.task("reload", (done) => {
 });
 
 gulp.task("serve", gulp.series("scripts", "styles", (done) => {
-  browserSync.create().init({
+  browserSync.init({
     notify: false,
     logPrefix: "ORG",
     // Allow scroll syncing across breakpoints
@@ -198,7 +199,7 @@ gulp.task("serve", gulp.series("scripts", "styles", (done) => {
 
 gulp.task("test", (done) => {
   browserSync.create().init({
-    files: ["test/**/*.test.js", "app/js/**/*.js"],
+    files: ["test/**/*.test.js", "app/js/**/*.js", "test/qunit.html"],
     notify: true,
     logPrefix: "ORG_TEST",
     server: ".",
