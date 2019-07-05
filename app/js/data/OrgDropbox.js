@@ -112,7 +112,7 @@
         } else if (file.sync === SyncStatus.MODIFIED) { // client file is changed
           uploadFile(
             file.sync.path,
-            ORG.Store.getFileContents(file),
+            ORG.Store.getFileContents(file.id),
             (metadata) => {
               file.dml = new Date(metadata.server_modified).getTime();
               file.sync.stat = SyncStatus.SYNC;

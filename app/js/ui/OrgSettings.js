@@ -1,112 +1,181 @@
 (() => {
-  const itemTmpl = (name, value) =>
-    `<li class="collapsed" data-setting="${name}" data-lvl="1">
-      <b class="title">${name}</b>
-      <pre>${value}</pre>
-    </li>`;
+  const itemTmpl = (setting, collapsed = false) => `
+  <li class="${collapsed ? "collapsed " : ""}lvl1" data-setting="${setting.name}" data-lvl="1">
+   <span class="title">${setting.name}</span>
+   <pre class="body lvl2">${setting.value}</pre>
+  </li>`;
 
-  const itemEditTmpl = (name = "", value = "") =>
-    `<li class="edit" data-setting="${name}" data-lvl="1">
-      <input type="text" placeholder="setting name" value="${name}"/>
-      <textarea placeholder="value">${value}</textarea>
-      ${ORG.icon("done")}${ORG.icon("close")}${ORG.icon("reset")}
-    </li>`;
+  const editTmpl = (setting = {"name": "", "value": ""}) => `<li class="border cf lvl1 inedit">
+ <input type="text" class="lvl1" spellcheck="false" placeholder="setting name" value="${setting.name}"/>
+ <textarea class="lvl2" spellcheck="false" placeholder="value">${setting.value}</textarea>
+ ${ORG.Icons.icon(setting.name ? setting.default ? "reset" : "delete" : "")}${ORG.Icons.icon("close")}${ORG.Icons.icon("done")}
+</li>`;
 
   const init = ($container) => {
-    let events = {
-      edit: ($li) => $(itemEditTmpl($li.data("setting"), $li.find("pre").text()))
-        .replaceAll($li).mark()
-        .find("input").focus().end()
-        .find("textarea").autoHeight(),
-      close: ($li, value) => value !== undefined ?
-        $(itemTmpl($li.data("setting"), value)).replaceAll($li).mark() : $li.remove(),
-      done: ($li, oldValue) => {
-        let oldName = $li.data("setting");
-        let $inputs = $li.find("input");
-        let newName = $inputs.val().trim();
-        if (!newName) {
-          return oldValue !== undefined ? $(itemTmpl(oldName, oldValue)).replaceAll($li).mark() : $li.remove();
+    let textareaTimeout;
+    const events = {
+      "close": ($li) => {
+        const setting = $li.data("item");
+
+        if (setting) {
+          return $(itemTmpl(setting)).data("item", setting).replaceAll($li);
         }
-        let newValue = $inputs.next().val().trim();
-        let settings = ORG.Settings.getSettings(true);
-        delete settings[oldName];
-        settings[newName] = newValue;
-        ORG.Settings.setSettings(settings);
-        return $(itemTmpl(newName, newValue)).replaceAll($li).mark();
+        const $prev = $li.prev();
+        if ($prev[0]) $prev.cursor();
+        else $li.next().cursor();
+        $li.remove();
+        return $prev;
       },
-      reset: ($li, value) => $container.orgNotify({
-        content: (value !== undefined ? "Reset to default " : "Cancel setting ") + $li.find("input").val() + "?",
-        confirm: () => {
-          let settings = ORG.Settings.getSettings(true);
-          delete settings[$li.data("setting")];
-          ORG.Settings.setSettings(settings);
-          $container.orgSettings(ORG.Settings.getSettings());
-        },
+      "delete": ($li) => {
+        const setting = $li.data("item");
+        $li.closest(".orgpage")
+          .orgNotify({
+            "grid": 1,
+            "message": `Delete setting "${setting.name}"?`,
+            "confirm": () => {
+              try {
+                if (ORG.Settings.deleteSetting(setting)) {
+                  const $prev = $li.prev();
+                  if ($prev[0]) $prev.cursor();
+                  else $li.next().cursor();
+                  $li.remove();
+                }
+              } catch (errorText) {
+                this.closest(".orgpage").orgNotify({"message": errorText});
+              }
+            }
+          });
+        return $();
+      },
+      "done": ($li) => {
+        const oldSetting = $li.data("item");
+        const newSetting = {
+          "name": $li.find("input").val().trim(),
+          "value": $li.find("textarea").val().trim(),
+          "default": oldSetting ? oldSetting.default : false
+        };
+
+        try {
+          if (ORG.Settings.saveSetting(newSetting, oldSetting)) {
+            return $(itemTmpl(newSetting)).data("item", newSetting).replaceAll($li).cursor();
+          }
+        } catch (errorMessage) {
+          $li.closest(".orgpage").orgNotify({"message": errorMessage});
+        }
+        return $();
+      },
+      "edit": ($li) => {
+        $li.closest(".orgpage").find(".inedit").each((idx, item) => {
+          const $item = $(item);
+          const itemData = $item.data("item");
+          $(itemTmpl(itemData)).data("item", itemData).replaceAll($item);
+        });
+        const item = $li.data("item");
+        return $(editTmpl(item)).data("item", item).replaceAll($li);
+      },
+      "reset": ($li) => $li.closest(".orgpage").orgNotify({
+        "grid": 1,
+        "message": `Reset to default "${$li.data("item").name}"?`,
+        "confirm": () => {
+          const setting = ORG.Settings.deleteSetting($li.data("item"));
+          $(itemTmpl(setting)).data("item", setting).replaceAll($li).cursor();
+        }
       }),
     };
-    if (!$.isMobile()) {
-      $(document).orgKeyboard({
-        "return": [() => events.edit($container.find(".select")), {
-          delegate: "input",
-          fn: (ev) => $(ev.target).next().focus().moveCaret().trigger("keydown"),
-        }],
-        "esc": [() => $container.find(".select.edit .close").click(), {
-          delegate: "input,textarea",
-          fn: (ev) => $(ev.target).siblings(".close").click(),
-        }],
-        "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
-          delegate: "input,textarea",
-          fn: (ev) => $(ev.target).siblings(".done").click(),
-        }],
-        "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-        "tab": () => {
-          let $selected = $container.find(".select");
-          return $selected.hasClass("edit") ? $selected.find("input").focus() : $selected.toggleClass("collapsed");
-        },
-        "n": () => $container.find(".select").move(),
-        "down": [() => $container.find(".select").move(), {
-          delegate: "input",
-          fn: (ev) => $(ev.target).next().focus(),
-        }],
-        "p": () => $container.find(".select").move("prev"),
-        "up": () => $container.find(".select").move("prev"),
-      });
-    } else {
-      $container.on("contextmenu", "li:not(.edit)", function() {
-        events.edit($(this));
-        return false;
-      });
-    }
-    return $container.on("click", "li:not(.edit)", function(ev) {
-      $(this).mark().toggleClass("collapsed");
+
+    /*
+     * if (!$.isMobile()) {
+     *   $(document).orgKeyboard({
+     *     "return": [() => events.edit($container.find(".select")), {
+     *       "delegate": "input",
+     *       "fn": (ev) => $(ev.target).next().focus().moveCaret().trigger("keydown"),
+     *     }],
+     *     "esc": [() => $container.find(".select.edit .close").click(), {
+     *       "delegate": "input,textarea",
+     *       "fn": (ev) => $(ev.target).siblings(".close").click(),
+     *     }],
+     *     "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
+     *       "delegate": "input,textarea",
+     *       "fn": (ev) => $(ev.target).siblings(".done").click(),
+     *     }],
+     *     "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
+     *     "tab": () => {
+     *       const $selected = $container.find(".select");
+     *       return $selected.hasClass("edit") ? $selected.find("input").focus() : $selected.toggleClass("collapsed");
+     *     },
+     *     "n": () => $container.find(".select").move(),
+     *     "down": [() => $container.find(".select").move(), {
+     *       "delegate": "input",
+     *       "fn": (ev) => $(ev.target).next().focus(),
+     *     }],
+     *     "p": () => $container.find(".select").move("prev"),
+     *     "up": () => $container.find(".select").move("prev"),
+     *   });
+     * } else {
+     */
+    return $container.on("click", "li:not(.inedit)", function () {
+      $(this).cursor().cycle();
       return false;
     }).on("click", "pre", (ev) => {
-      $(ev.target).closest("li").mark();
+      $(ev.target).closest("li").cursor();
       return false;
-    }).on("click", ".orgicon", function() {
-      let $li = $(this).closest("li");
-      events[this.classList[1]]($li, ORG.Settings.getSettings()[$li.data("setting")]);
+    }).on("click", ".orglist .orgicon", function () {
+      const $li = $(this).closest("li");
+      events[this.classList[1]]($li, ORG.Settings.getSettings()[$li.data("setting")]).cursor();
       return false;
-    }).on("input", "textarea", (ev) => $(ev.target).autoHeight());
+    }).on("contextmenu", "li:not(.inedit)", function () {
+      events.edit($(this)).cursor().find("textarea").autoHeight();
+      return false;
+    }).on("input", "textarea", (ev) => {
+      clearTimeout(textareaTimeout);
+      textareaTimeout = setTimeout(() => $(ev.target).autoHeight(), 150);
+    });
   };
 
-  $.fn.orgSettings = function(settings) {
-    return init(this.removeData().off().empty().append(
+  $.fn.orgSettings = function (settings) {
+    const {ICONTYPE} = ORG.Icons;
+    const $orgSettings = init(this.removeData().off().empty().append(
       $(document.createElement("div")).orgNavbar({
-        add: () => $(itemEditTmpl()).appendTo(this.find(".orgsettings")).scrollTo().find("input").focus(),
-        cycle: () => {
-          let $allLi = this.find(".orgsettings li");
-          return $allLi[$allLi.first().hasClass("collapsed") ? "removeClass" : "addClass"]("collapsed");
+        "org": {"type": ICONTYPE.ICON, "fn": "#"},
+        "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
+        "title": {"type": "Settings"},
+        "add": {
+          "type": ICONTYPE.ICON,
+          "fn": () => {
+            this.find(".inedit .orgicon.close").click();
+            $(editTmpl()).appendTo(this.find(".orglist")).cursor().find("input").focus();
+          }
         },
-        reset: () => this.orgNotify({
-          content: "Reset all settings to default values?",
-          confirm: () => ORG.Settings.setSettings({}) && this.orgSettings(ORG.Settings.getSettings()),
-        }),
-        title: "Settings",
-      }),
-      $(document.createElement("ul")).addClass("orgsettings orgview").append(
-        Object.keys(settings).sort().map((s) => itemTmpl(s, settings[s]))
-      ).find(">li:first-child").addClass("select").end()
-    ));
+        "cycle": {
+          "type": ICONTYPE.ICON,
+          "fn": () => {
+            const $allLi = this.find(".orglist li");
+            return $allLi[$allLi.first().hasClass("collapsed") ? "removeClass" : "addClass"]("collapsed");
+          }
+        },
+        "reset": {
+          "type": ICONTYPE.ICON,
+          "fn": () => this.orgNotify({
+            "message": "Reset all settings to default values?",
+            "confirm": () => ORG.Settings.resetSettings() && this.orgSettings(ORG.Settings.getSettings()),
+          })
+        },
+      }).addClass("flex"),
+      $(document.createElement("div")).orgNavbar({
+        "Change Theme": () => { }
+      }).addClass("grid"),
+      `<ul class="orglist orgview${ORG.Utils.isMobile ? " nocursor" : ""}">
+      ${settings.map((setting) => itemTmpl(setting, true)).join("")}
+      </ul>`));
+
+    const $allLi = $orgSettings.find(".orglist>li").each(function (idx) {
+      $(this).data("item", settings[idx]);
+    });
+
+    if (!ORG.Utils.isMobile) {
+      $allLi.eq(0).cursor();
+    }
+
+    return $orgSettings;
   };
 })();

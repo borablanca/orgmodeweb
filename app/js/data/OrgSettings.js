@@ -29,7 +29,7 @@
       if (settingName.startsWith("custom-agenda-")) {
         agenda[settingName.slice(-1)] = settings[settingName]
           .split("\n")
-          .map((slotTxt) => arrToObj(shellSplit(slotTxt)));
+          .map((slotTxt) => arrToObj(shellSplit(slotTxt).slice(1)));
       }
       return agenda;
     }, {}),
@@ -60,34 +60,20 @@
       });
     },
     "getSettingsObj": getSettingsObj,
-    "getStyles": (...faces) => {
-      let allStyles = "<style>";
-
-      for (let faceCounter = 0, nfaces = faces.length; faceCounter < nfaces;) {
-        allStyles += $.map(
-          faces[faceCounter++],
-          (stylesObj, selector) => `.${selector.toLowerCase()}{${$.map(
-            stylesObj,
-            (style, type) => `${type.toLowerCase()}:${style};`
-          ).join("")}}`
-        ).join("");
-      }
-      return allStyles + "</style>";
-    },
-    "_getStyles": (settings) => {
-      const todoFaces = settings["todo-faces"];
-      return `<style type='text/css'>
-      ${Object.keys(todoFaces)
-    .map((key) => {
-      const curFace = todoFaces[key];
-      return `.todo-${key}{${Object.keys(curFace).map((key) => `${key}:${curFace[key]};`).join("")}}`;
-    }).join("")}</style>`;
+    "getStyles": (settings = getSettingsObj()) => {
+      const todoFaces = settings["todo-faces"].split("\n").map((faceTxt) => shellSplit(faceTxt)).reduce((obj, shellSplitArr) => {
+        obj[shellSplitArr[0]] = arrToObj(shellSplitArr.slice(1));
+        return obj;
+      }, {});
+      return `<style>${$.map(
+        todoFaces,
+        (face, selector) => `.${selector.toLowerCase()}{${$.map(
+          face,
+          (style, type) => `${type.toLowerCase()}:${style};`
+        ).join("")}}`
+      ).join("")}</style>`;
     },
     "getPriorityLetters": (headings = []) => (headings.PRIORITY || getSettingsObj())["priority-letters"].split(/\s+/),
-    "getTodoFaces": (settings = getSettingsObj()) => settings["todo-faces"].split("\n").map((faceTxt) => shellSplit(faceTxt)).reduce((obj, shellSplitArr) => {
-      obj[shellSplitArr[0]] = arrToObj(shellSplitArr.slice(1));
-      return obj;
-    }, {}),
     "getTodoKeywords": (headings = []) => (headings.TODO || getSettingsObj()["todo-keywords"]).replace(/\([^)]*\)/g, "").split(/\s+/),
     "deleteSetting": (setting) => {
       const settings = getSettingsObj(1);

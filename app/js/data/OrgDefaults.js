@@ -7,5 +7,5 @@ ORG.defaults = {
   "priority-letters": "A B C",
   "show-habits-only-for-today": 1,
   "todo-keywords": "TODO | DONE",
-  "todo-faces": "TODO --color white\nDONE --color green",
+  "todo-faces": "TODO --color #fff\nDONE --color #0f0",
 };

@@ -10,10 +10,12 @@
   };
 
   const init = ($container) => {
-    const gotoFn = () => {
-      const $selected = $container.find(".select a,.select button");
-      return $selected[0] && $selected[0].click();
-    };
+    /*
+     * const gotoFn = () => {
+     *   const $selected = $container.find(".select a,.select button");
+     *   return $selected[0] && $selected[0].click();
+     * };
+     */
 
     /*
      * const nextFn = () => $container.find(".select").move();
@@ -52,7 +54,7 @@
               );
 
               if (file) {
-                ORG.Store.setFileProperty(file, {
+                ORG.Store.setFileProperty(file.id, {
                   "dml": new Date(metadata.server_modified).getTime(), // last dropbox timestamp
                 });
                 $page.orgNotify({
@@ -78,32 +80,39 @@
     ORG.Dropbox.getFileList(
       path,
       cursor,
-      (dboxResult) => init(this.removeData().off().empty().append(
-        $(document.createElement("div")).orgNavbar({
-          "org": {"type": ICONTYPE.ICON, "fn": "#"},
-          "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
-          "title": {"type": "Dropbox Files"},
-          "unlink": {
-            "type": ICONTYPE.ICON, "fn": () => this.orgNotify({
-              "message": "Are you sure to unlink Dropbox?",
-              "confirm": () => {
-                if (ORG.Dropbox.unlink()) {
-                  this.orgNotify({
-                    "message": "Successfully unlinked Dropbox",
-                    "duration": 1000,
-                    "cb": () => ORG.route("#")
-                  });
-                }
-              },
-            })
-          }
-        }).addClass("flex"),
-        $(document.createElement("ul")).addClass("orglist").append(
-          dboxResult.entries.map((entry) => entry[".tag"] === "folder" || entry.name.match(/\.org$/) ? itemTmpl(entry) : "")
-        ).find("li:first-child").mark().end(),
-        dboxResult.has_more ?
-          $(document.createElement("button")).text("more").on("click", () => this.orgDropbox(path, dboxResult.cursor)) : ""
-      )),
+      (dboxResult) => {
+        const $dbox = init(this.removeData().off().empty().append(
+          $(document.createElement("div")).orgNavbar({
+            "org": {"type": ICONTYPE.ICON, "fn": "#"},
+            "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
+            "title": {"type": "Dropbox Files"},
+            "unlink": {
+              "type": ICONTYPE.ICON, "fn": () => this.orgNotify({
+                "message": "Are you sure to unlink Dropbox?",
+                "confirm": () => {
+                  if (ORG.Dropbox.unlink()) {
+                    this.orgNotify({
+                      "message": "Successfully unlinked Dropbox",
+                      "duration": 1000,
+                      "cb": () => ORG.route("#")
+                    });
+                  }
+                },
+              })
+            }
+          }).addClass("flex"),
+          `<ul class="orglist${ORG.Utils.isMobile ? " nocursor" : ""}">
+        ${dboxResult.entries.map((entry) => entry[".tag"] === "folder" || entry.name.match(/\.org$/) ? itemTmpl(entry) : "").join("")}
+        </ul>`,
+          dboxResult.has_more ?
+            $(document.createElement("button")).text("more").on("click", () => this.orgDropbox(path, dboxResult.cursor)) : ""
+        ));
+
+        if (!ORG.Utils.isMobile) {
+          $dbox.find(".orglist>li:first-child").cursor();
+        }
+        return $dbox;
+      },
       () => this.orgNotify({"message": "Connection Error"})
     );
     return this;

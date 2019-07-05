@@ -125,7 +125,7 @@
         name,
         "dml": new Date().getTime(),
         "sync": {
-          "stat": SyncStatus.SYNC,
+          "stat": SyncStatus[syncType ? "SYNC" : "LOCAL"],
           "type": syncType,
           "path": syncPath
         }
@@ -135,37 +135,50 @@
       set(FilePrefix + id, ORG.Writer.writeFile(nodes));
       return file;
     },
-    "getFileHeadings": (file = {}, settings) => file.id && fileExists(file.name, file.sync.type, file.sync.path) ?
-      ORG.Parser.parseFile(
-        file.name,
-        get(FilePrefix + (ORG.Utils.isString(file) ? file : file.id)),
-        settings
-      ) : null,
-    "getFile": (file) => {
-      if (!file || !file.id) throw "Unknown file";
+    "getFileHeadings": (fileId, settings) => {
       const fileList = JSON.parse(get(FilePrefix));
 
       for (
-        let fileCounter = 0, nfiles = fileList.length, id = file.id;
+        let fileIdx = 0, nfiles = fileList.length, curFile;
+        fileIdx < nfiles;
+        fileIdx++
+      ) {
+        curFile = fileList[fileIdx];
+        if (curFile.id === fileId) {
+          return ORG.Parser.parseFile(
+            curFile.name,
+            get(FilePrefix + fileId),
+            settings
+          );
+        }
+      }
+      throw "File not found";
+    },
+    "getFileById": (fileId) => {
+      if (!fileId) throw "Unknown file ID";
+      const fileList = JSON.parse(get(FilePrefix));
+
+      for (
+        let fileCounter = 0, nfiles = fileList.length;
         fileCounter < nfiles;
         fileCounter++
       ) {
-        if (fileList[fileCounter].name === id) {
+        if (fileList[fileCounter].id === fileId) {
           return fileList[fileCounter];
         }
       }
       throw "File not found";
     },
-    "getFileContents": (file) => !file || !file.id ? null : get(FilePrefix + file.id),
-    "setFileProperty": (file, propertyObj) => {
+    "getFileContents": (fileId) => fileId ? get(FilePrefix + fileId) : null,
+    "setFileProperty": (fileId, propertyObj) => {
       const fileNames = getFileList();
 
       for (
-        let fileIdx = 0, nfiles = fileNames.length, id = $.isPlainObject(file) ? file.id : file;
+        let fileIdx = 0, nfiles = fileNames.length;
         fileIdx < nfiles;
         fileIdx++
       ) {
-        if (fileNames[fileIdx].id === id) {
+        if (fileNames[fileIdx].id === fileId) {
           Object.assign(fileNames[fileIdx], propertyObj);
           saveFileNames(fileNames);
           return true;
@@ -173,13 +186,12 @@
       }
       throw "File not found";
     },
-    "deleteFile": (file) => {
+    "deleteFile": (fileId) => {
       const fileNames = getFileList();
-      const fileId = $.isPlainObject(file) ? file.id : file;
 
-      for (let fileCounter = 0, nfiles = fileNames.length; fileCounter < nfiles; fileCounter++) {
-        if (fileNames[fileCounter].id === fileId) {
-          fileNames.splice(fileCounter, 1);
+      for (let fileIdx = 0, nfiles = fileNames.length; fileIdx < nfiles; fileIdx++) {
+        if (fileNames[fileIdx].id === fileId) {
+          fileNames.splice(fileIdx, 1);
           saveFileNames(fileNames);
           del(FilePrefix + fileId);
           return true;

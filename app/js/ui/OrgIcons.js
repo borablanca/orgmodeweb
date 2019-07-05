@@ -36,6 +36,6 @@
 <path d="${icon[1]}" fill="${_opts.color}"/>
 </svg>` : "";
     },
-    "textIcon": (iconName) => `<a class="orgicon ${iconName}">${iconName}</a>`
+    "textIcon": (iconName) => `<a class="orgicon ${iconName} nowrap">${iconName}</a>`
   };
 })();

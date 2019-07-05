@@ -30,7 +30,7 @@ ${plan.items ? `<div${plan.grid ? " class='grid'" : ""}>
 ${plan.items.map((item) => textIcon(item.name)).join("")}
 </div>` : ""}
 ${plan.prompt ? `<input type="text" spellcheck="false" value="${plan.default || ""}"/>` : ""}
-${plan.confirm ? `<div class="grid">${icon("close")}${icon("done")}</div>` : ""}
+${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
 </div>
 </div>`
     ).hide();

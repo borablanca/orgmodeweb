@@ -42,7 +42,7 @@ QUnit.module("OrgStore Tests", (hooks) => {
   });
   QUnit.test("create file", (assert) => {
     const file = store.createFile("file1");
-    const fileHeadings = store.getFileHeadings(file, defaults);
+    const fileHeadings = store.getFileHeadings(file.id, defaults);
     assert.equal(fileHeadings.TEXT.length, 0);
 
     assert.throws(
@@ -53,12 +53,12 @@ QUnit.module("OrgStore Tests", (hooks) => {
   QUnit.test("update existing file", (assert) => {
     const file = store.createFile("file1");
     assert.equal(store.getFileList().length, 1);
-    assert.equal(store.getFileHeadings(file, defaults).FILENAME, "file1");
+    assert.equal(store.getFileHeadings(file.id, defaults).FILENAME, "file1");
 
     const updatedFile = Object.assign({}, file, {"name": "file1updated"});
     store.updateFile(updatedFile);
-    assert.ok(store.getFileHeadings(updatedFile, defaults));
-    assert.equal(store.getFileHeadings(updatedFile, defaults).FILENAME, "file1updated");
+    assert.ok(store.getFileHeadings(updatedFile.id, defaults));
+    assert.equal(store.getFileHeadings(updatedFile.id, defaults).FILENAME, "file1updated");
 
     store.updateFile(
       updatedFile,
@@ -66,7 +66,7 @@ QUnit.module("OrgStore Tests", (hooks) => {
         "TEXT": ""
       })
     );
-    assert.equal(store.getFileHeadings(updatedFile, defaults).length, 1);
+    assert.equal(store.getFileHeadings(updatedFile.id, defaults).length, 1);
   });
   QUnit.test("check file exists", (assert) => {
     store.createFile("file name");
@@ -84,10 +84,19 @@ QUnit.module("OrgStore Tests", (hooks) => {
   });
   QUnit.test("get file", (assert) => {
     const file = store.createFile("file name");
-    assert.notOk(store.getFileHeadings());
-    assert.notOk(store.getFileHeadings(""));
-    assert.notOk(store.getFileHeadings("not file"));
-    const fileHeadings = store.getFileHeadings(file, defaults);
+    assert.throws(
+      store.getFileHeadings,
+      /File not found/
+    );
+    assert.throws(
+      () => store.getFileHeadings(""),
+      /File not found/
+    );
+    assert.throws(
+      () => store.getFileHeadings("not file"),
+      /File not found/
+    );
+    const fileHeadings = store.getFileHeadings(file.id, defaults);
     assert.equal(fileHeadings.FILENAME, "file name");
     assert.equal(fileHeadings.TEXT.length, 0);
   });
@@ -118,13 +127,16 @@ QUnit.module("OrgStore Tests", (hooks) => {
       () => store.deleteFile("not a file"),
       /File not found/
     );
-    assert.ok(store.getFileHeadings(file, defaults));
-    assert.ok(store.deleteFile(file));
-    assert.notOk(store.getFileHeadings(file, defaults));
+    assert.ok(store.getFileHeadings(file.id, defaults));
+    assert.ok(store.deleteFile(file.id));
+    assert.throws(
+      () => store.getFileHeadings(file.id, defaults),
+      /File not found/
+    );
   });
   QUnit.test("set file property", (assert) => {
     const file = store.createFile("file1");
-    store.setFileProperty(file, {"prop": "val"});
+    store.setFileProperty(file.id, {"prop": "val"});
     assert.equal(store.getFileList()[0].prop, "val");
   });
 });
