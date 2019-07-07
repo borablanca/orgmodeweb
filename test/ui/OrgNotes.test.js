@@ -60,4 +60,11 @@ QUnit.module("OrgNotes Tests", (hooks) => {
     $(".orgnotify .orgicon.done", "#qunit-fixture").click();
     assert.equal($(".orgnotice", "#qunit-fixture").length, 1);
   });
+
+  QUnit.test("drawers", (assert) => {
+    const file = createFile("file1", "* node heading\nbody text\n:DRAWER1:\ndrawer text 1\ndrawer text 2\n:END:");
+    $("#qunit-fixture").orgNotes(file);
+    $(".orgnotes li + li").click();
+    assert.equal($(".orgnotes li + li .collapsible").length, 1);
+  });
 });

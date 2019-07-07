@@ -110,7 +110,7 @@ log1
 :LOGBOOK:
 * body text starting with star
 *body text`;
-  const {parseFile, parseLinks, parseTimestamp} = ORG.Parser;
+  const {parseFile, parseLinks, parseTimestamp, parseDrawers} = ORG.Parser;
   const defaults = ORG.defaults;
 
   QUnit.test("null file", (assert) => {
@@ -549,5 +549,31 @@ log1
     assert.equal(ts1.rmax, "3d");
     assert.equal(ts1.w, "2w");
     assert.equal(ts1.n, "");
+  });
+
+  QUnit.test("parseDrawers", (assert) => {
+    const $html = $(parseDrawers([
+      "line1",
+      ":DRAWER1:",
+      "inside drawer",
+      ":END:",
+      "  :DRAWER2: ",
+      "inside second drawer",
+      ":END:"
+    ]));
+    assert.equal($html.length, 3);
+    assert.notOk($html.eq(0).hasClass("collapsible"));
+    assert.ok($html.eq(1).hasClass("collapsible"));
+    assert.equal($html.eq(1).find("div").length, 3);
+    assert.ok($html.eq(2).hasClass("collapsible"));
+  });
+  QUnit.test("parseDrawers no :END: drawer", (assert) => {
+    const $html = $(parseDrawers([
+      ":DRAWER1:",
+      "inside drawer"
+    ]));
+    assert.equal($html.length, 1);
+    assert.ok($html.eq(0).hasClass("collapsible"));
+    assert.equal($html.eq(0).find("div").length, 3);
   });
 });

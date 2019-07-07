@@ -7,8 +7,9 @@
   const InactiveTimestampGRE = new RegExp(InactiveTimestampRE, "g");
   const AgendaTimestampRE = new RegExp(`\\s*(CLOSED|SCHEDULED|DEADLINE):\\s*(?:\\[|<)${TimestampREStr}(?:\\]|>)(?:--?(<[^<]+>))?\\s*\n?`);
   const AgendaTimestampGRE = new RegExp(AgendaTimestampRE, "g");
-  const DrawerStartRE = /^\s*:PROPERTIES:\s*$/i;
-  const DrawerPropertyRE = /^\s*:([^\s]+):\s*(.*)$/;
+  const DrawerStartRE = /^\s*:([^\s]+):\s*$/i;
+  const PropertyDrawerStartRE = /^\s*:PROPERTIES:\s*$/i;
+  const PropertyDrawerPropertyRE = /^\s*:([^\s]+):\s*(.*)$/;
   const DrawerEndRE = /^\s*:END:\s*$/i;
   const SettingRE = /(?:^|\r\n|[\r\n])#\+(\w*):\s*([^\r\n]*)/;
   const SettingGRE = new RegExp(SettingRE, "g");
@@ -122,12 +123,12 @@
               heading[field] = createTimestamp(match.slice(1));
               if (heading[field].n) heading.STMPS.push(heading[field]); // eslint-disable-line max-depth
             }
-          } else if (DrawerStartRE.test(line)) { // PROPERTY DRAWER
+          } else if (PropertyDrawerStartRE.test(line)) { // PROPERTY DRAWER
             while (
               typeof (line = headingLines[lineIdx++]) === "string" &&
               !DrawerEndRE.test(line)
             ) {
-              if (lineMatches = line.match(DrawerPropertyRE)) { // eslint-disable-line max-depth
+              if (lineMatches = line.match(PropertyDrawerPropertyRE)) { // eslint-disable-line max-depth
                 heading.PROPS[lineMatches[1].toUpperCase()] = lineMatches[2].trim();
               } else {
                 heading.TEXT.push(line);
@@ -139,6 +140,31 @@
         headings.push(heading);
       }
       return headings;
+    },
+
+    "parseDrawers": (text = []) => {
+      let bodyHtml = "";
+
+      for (
+        let lineIdx = 0, nlines = text.length, line;
+        lineIdx < nlines;
+        lineIdx++
+      ) {
+        line = text[lineIdx];
+        if (DrawerStartRE.test(line)) {
+          bodyHtml += `<div class="collapsible collapsed"><div>:${line.match(DrawerStartRE)[1]}:</div>`;
+          while (
+            typeof (line = text[++lineIdx]) === "string" &&
+            !DrawerEndRE.test(line)
+          ) {
+            bodyHtml += `<div>${line}</div>`;
+          }
+          bodyHtml += "<div>:END:</div></div>";
+        } else {
+          bodyHtml += `<div>${line}</div>`;
+        }
+      }
+      return bodyHtml;
     },
 
     "parseLinks": (text) => {

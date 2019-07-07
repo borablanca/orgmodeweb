@@ -25,7 +25,7 @@ QUnit.module("OrgFiles Tests", (hooks) => {
     assert.equal($li.length, 3);
     assert.ok($li.eq(0).hasClass("sync" + ORG.Store.SyncStatus.SYNC));
     assert.equal($li.eq(0).find(".orgicon .dbox").length, 1);
-    assert.ok($li.eq(1).hasClass("sync" + ORG.Store.SyncStatus.SYNC));
+    assert.notOk($li.eq(1).hasClass("sync" + ORG.Store.SyncStatus.SYNC));
     assert.equal($li.eq(1).find(".orgicon .file").length, 1);
     assert.equal($li.find(">a").length, 3);
 

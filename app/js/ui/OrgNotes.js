@@ -1,16 +1,10 @@
 (() => {
   const writeTimestamp = ORG.Writer.writeTimestamp;
-  const archiveRE = ORG.Parser.ArchiveRE;
+  const {parseDrawers, archiveRE} = ORG.Parser;
   const {icon, ICONTYPE} = ORG.Icons;
+  const {markup} = ORG.Utils;
 
-  const itemTmpl = (node, collapsed = false) => `
-  <li class="${collapsed ? "collapsed " : ""}lvl${node.LVL % 3}${node.TAGS && node.TAGS.match(archiveRE) ? " archive" : ""}" style="padding-left:${(node.LVL - 1) * 15 + 24}px" data-lvl="${node.LVL}">
-  <div class="title">${node.TODO ? `<span class="${node.TODO.toLowerCase()}">${node.TODO} </span>` : ""}${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}${node.TITLE ? `<span>${$.markup(node.TITLE)}</span>` : ""}${node.TAGS ? `<span class="tag">${$.markup(node.TAGS)}</span>` : ""}</div>
-  <div class="body">${node.TEXT.length ? `<pre class="txt">${$.markup(node.TEXT.join("\n"))}</pre>` : ""}</div>
-  </li>`;
-
-  const itemBodyTmpl = ($li) => {
-    const node = $li.data("node");
+  const itemBodyTmpl = (node) => {
     const propKeys = Object.keys(node.PROPS);
     return `<div class="body">
   ${node.CLOSED ? `<div class="cls">CLOSED: <span class="ts">${writeTimestamp(node.CLOSED, true)}</span></div>` : ""}
@@ -18,12 +12,15 @@
   ${node.SCHEDULED ? `<div class="sch">SCHEDULED: <span class="ts">${writeTimestamp(node.SCHEDULED)}</span></div>` : ""}
   ${propKeys.length ? `<div class="props collapsible collapsed">
   <div>:PROPERTIES:</div>
-  ${propKeys.map((key) => `<div><span>:${key}: </span><span>${$.markup(node.PROPS[key])}</span></div>`).join("")}
-  <div>:END:</div>
-        </div>` : ""}
-        ${node.TEXT.length ? `<pre class="txt">${$.markup(node.TEXT.join("\n"))}</pre>` : ""}
-      </div>`;
+  ${propKeys.map((key) => `<div><span>:${key}: </span><span>${markup(node.PROPS[key])}</span></div>`).join("")}
+  <div>:END:</div></div>` : ""}
+  ${node.TEXT.length ? `<pre class="txt">${parseDrawers(node.TEXT.map((text) => markup(text)))}</pre>` : ""}</div>`;
   };
+
+  const itemTmpl = (node, body = 1, collapsed = 0) => `<li class="${collapsed ? "collapsed " : ""}${body ? "updated " : ""}lvl${node.LVL % 3}${node.TAGS && node.TAGS.match(archiveRE) ? " archive" : ""}" style="padding-left:${(node.LVL - 1) * 15 + 24}px" data-lvl="${node.LVL}">
+  <div class="title">${node.TODO ? `<span class="orgtodo ${node.TODO.toLowerCase()}">${node.TODO} </span>` : ""}${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}${node.TITLE ? `<span>${markup(node.TITLE)}</span>` : ""}${node.TAGS ? `<span class="tag">${markup(node.TAGS)}</span>` : ""}</div>
+  ${body ? `<div class="body">${itemBodyTmpl(node)}</div>` : ""}
+  </li>`;
 
   const editTmpl = (node = {"LVL": 1, "PROPS": {}, "TEXT": []}) => {
     const todoTxt = (node.TODO ? `${node.TODO} ` : "") + (node.PRI ? `[#${node.PRI}] ` : "");
@@ -38,6 +35,20 @@
  <textarea spellcheck="false" placeholder="note body" rows="1">${bodyTxt}</textarea>
  ${icon("delete")}${icon("close")}${icon("done")}
 </li > `;
+  };
+
+  const updateHeadingBody = ($li) => {
+    if (!$li.hasClass("updated")) {
+      $li.addClass("updated").append(itemBodyTmpl($li.data("node")));
+      for (
+        let lvl = $li.data("lvl"), $next = $li.next(), nlvl = $next.data("lvl");
+        nlvl > lvl;
+        $next = $next.next(), nlvl = $next.data("lvl")
+      ) {
+        $next.addClass("updated").append(itemBodyTmpl($next.data("node")));
+      }
+    }
+    return $li;
   };
 
   const events = {
@@ -279,7 +290,7 @@
     return $container.on("click", "li:not(.inedit)", function () {
       const $this = $(this);
       $this.cursor();
-      if (!$this.is(":first-child")) $this.cycle();
+      if (!$this.is(":first-child")) updateHeadingBody($this).cycle();
       return false;
     }).on("click", ".body", function () {
       $(this).closest("li").cursor();
@@ -370,7 +381,7 @@
       }).addClass("gridrow"),
       `<ul class="orgnotes orglist orgview">
       <li class="orgbuffertext"><pre>${nodes.TEXT || "\n"}</pre></li>
-      ${nodes.map((node) => itemTmpl(node, true)).join("")}
+      ${nodes.map((node) => itemTmpl(node, 0, 1)).join("")}
       </ul>`,
       nodes.length ? "" : "<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div></div>",
       ORG.Settings.getStyles()
