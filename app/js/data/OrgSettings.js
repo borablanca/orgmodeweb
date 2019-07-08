@@ -33,8 +33,6 @@
       }
       return agenda;
     }, {}),
-    "getDayNames": (settings = getSettingsObj()) => settings["day-names"].split(/\s+/),
-    "getMonthNames": (settings = getSettingsObj()) => settings["month-names"].split(/\s+/),
     "getSettings": (userSettingsOnly) => {
       const defaultSettings = ORG.defaults;
       const userSettings = getSettingsObj(1);
@@ -67,7 +65,7 @@
       }, {});
       return `<style>${$.map(
         todoFaces,
-        (face, selector) => `.${selector.toLowerCase()}{${$.map(
+        (face, selector) => `.${selector.toUpperCase()}{${$.map(
           face,
           (style, type) => `${type.toLowerCase()}:${style};`
         ).join("")}}`

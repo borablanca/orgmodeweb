@@ -1,6 +1,8 @@
 (() => {
   const {icon, ICONTYPE} = ORG.Icons;
-  const {SyncStatus, SyncType} = ORG.Store;
+  const {SyncStatus, SyncType, updateFile} = ORG.Store;
+  const {syncFile} = ORG.Sync;
+
   const itemTmpl = (file) => `<li class="border flex sync${file.sync.stat}">
   <a class="flex" href="#notes#${file.id}">
     ${icon(file.sync.type === SyncType.DBOX ? "dbox" : "file")}
@@ -48,28 +50,31 @@
       "context": ($li) => {
         if ($li.find(".orgicon.sync")[0]) {
           const $orgpage = $li.closest(".orgpage");
+
+          const updateFn = (stat, dml) => {
+            const file = $li
+              .removeClass((idx, className) => className.match(/sync[0-9]/))
+              .addClass("sync" + SyncStatus.INSYNC)
+              .data("file");
+            file.sync.stat = stat;
+            file.dml = dml;
+            syncFile(
+              file,
+              (status) => $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status),
+              () => $li.removeClass("sync" + SyncStatus.INSYNC) &&
+                $orgpage.orgNotify("Connection problem, couldn't sync file.")
+            );
+          };
           $orgpage.orgNotify({
             "items": [
               {"name": "Edit", "fn": () => events.edit($li)},
               {
                 "name": "Sync Force Local File",
-                "fn": () => {
-                  const file = $li.removeClass("conflict sync").addClass("insync").data("file");
-                  ORG.Dropbox.setFile(
-                    file.name,
-                    file,
-                    ORG.Store.getFileContents(file),
-                    () => $li.removeClass("insync").addClass("sync"),
-                    () => $li.removeClass("insync") && $orgpage.orgNotify("Connection problem, couldn't sync file."));
-                },
+                "fn": () => updateFn(SyncStatus.MODIFIED, Infinity)
               },
               {
                 "name": "Sync Force Server File",
-                "fn": () => {
-                  const fileName = $li.data("filename");
-                  ORG.Store.setFileProperty(fileName, {"dml": 0, "sync": ORG.Dropbox.SYNC.SYNC});
-                  return events.sync($li, ORG.Store.getFileNames()[fileName]);
-                },
+                "fn": () => updateFn(SyncStatus.SYNC, 0)
               },
             ]
           });
@@ -104,7 +109,7 @@
         try {
           if (file) { // update
             file.name = name;
-            ORG.Store.updateFile(file);
+            updateFile(file);
           } else { // new file
             file = ORG.Store.createFile(name);
           }
@@ -119,10 +124,22 @@
         const clss = $li.attr("class");
         const file = $li
           .removeClass((idx, className) => className.match(/sync[0-9]/))
-          .addClass("sync" + SyncStatus.INSYNC).data("file");
-        ORG.Dropbox.syncFile(
+          .addClass("sync" + SyncStatus.INSYNC)
+          .data("file");
+        ORG.Sync.syncFile(
           file,
-          (status) => $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status),
+          (status) => {
+            try {
+              file.sync.stat = status;
+              if (updateFile(file)) {
+                $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status);
+              }
+            } catch (errorMessage) {
+              $li.closest(".orgpage").orgNotify({
+                "message": errorMessage
+              });
+            }
+          },
           (message) => $li.attr("class", clss).closest(".orgpage").orgNotify({"message": message}));
       }
     };
@@ -190,7 +207,7 @@
               }
             }, {
               "name": "From Dropbox",
-              "fn": "#dbox"
+              "fn": "#dbox#"
             }]
           }, null, ORG)
         },
@@ -202,8 +219,24 @@
         Object.assign(
           {
             "Agenda": {"type": ICONTYPE.TEXT, "fn": "#agenda#a"},
-            "Match": {"type": ICONTYPE.TEXT, "fn": "#search#m"},
-            "Search": {"type": ICONTYPE.TEXT, "fn": "#search#s"},
+            "Match": {
+              "type": ICONTYPE.TEXT, "fn": () => {
+                this.orgNotify({
+                  "message": "Match Query:",
+                  "prompt": 1,
+                  "confirm": (query) => ORG.route("#search#m#" + query)
+                });
+              }
+            },
+            "Search": {
+              "type": ICONTYPE.TEXT, "fn": () => {
+                this.orgNotify({
+                  "message": "Search:",
+                  "prompt": 1,
+                  "confirm": (text) => ORG.route("#search#s#" + text)
+                });
+              }
+            },
           },
           Object.keys(customAgendas).reduce((agendaObj, key) => {
             agendaObj[key === "a" ? "Agenda" : customAgendas[key][0].header || "Agenda " + key] = {

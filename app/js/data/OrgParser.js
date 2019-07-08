@@ -143,6 +143,7 @@
     },
 
     "parseDrawers": (text = []) => {
+      const markup = ORG.Utils.markup;
       let bodyHtml = "";
 
       for (
@@ -157,11 +158,11 @@
             typeof (line = text[++lineIdx]) === "string" &&
             !DrawerEndRE.test(line)
           ) {
-            bodyHtml += `<div>${line}</div>`;
+            bodyHtml += `<div>${markup(line)}</div>`;
           }
           bodyHtml += "<div>:END:</div></div>";
         } else {
-          bodyHtml += `<div>${line}</div>`;
+          bodyHtml += `<div>${markup(line)}</div>`;
         }
       }
       return bodyHtml;
@@ -189,7 +190,6 @@
       return match ? createTimestamp(match) : null;
     },
 
-    "archiveRE": /:ARCHIVE:/,
     "linkRE": LinkRE,
   };
 })();

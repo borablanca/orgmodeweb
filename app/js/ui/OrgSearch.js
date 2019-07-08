@@ -1,95 +1,112 @@
 (() => {
-  const searcher = ORG.Searcher;
-  const calendar = ORG.Calendar;
+  const {search, SearchItemType} = ORG.Searcher;
+  const {ICONTYPE} = ORG.Icons;
+  const {markup, formatStr, singleLine} = ORG.Utils;
+  const hourTmpl = (ts) => ts.hs ? ts.hs + (ts.he ? "-" + ts.he + " " : "...... ") : "";
 
-  const hourTmpl = (hs, he) => hs ? (hs + (he ? ("-" + he + " ") : "...... ")) : "";
-
-  const timeTmpl = (node, settings, isToday) => {
-    switch (node.type) {
-    case searcher.itemTypes.SCH:
-      return (!node.offset || node.habit) ?
-        (node.hs ? hourTmpl(node.hs, node.he) : (isToday ? settings["agenda-scheduled-leaders"][0] : "")) : // sch today
-        $.formatStr(settings["agenda-scheduled-leaders"][1], node.offset); // sch passed
-    case searcher.itemTypes.DL:
-      return node.offset ?
-        (node.offset < 0 ? $.formatStr(settings["agenda-deadline-leaders"][1], -node.offset) : // dl passed
-          $.formatStr(settings["agenda-deadline-leaders"][2], node.offset)) : // dl approaching
-        (node.hs ? hourTmpl(node.hs, node.he) : settings["agenda-deadline-leaders"][0]); // dl today
-    case searcher.itemTypes.STAMP: return hourTmpl(node.hs, node.he);
-    case searcher.itemTypes.ISTAMP: return "[ ";
+  const timeTmpl = (node, settings) => {
+    switch (node.TYPE) {
+    case SearchItemType.SCH:
+      return `<span class="lvl2">${!node.OFFSET || node.PROPS.STYLE === "habit" ?
+        node.SCHEDULED.hs ? hourTmpl(node.SCHEDULED) : settings.scheduledLeaders[0] : // sch today
+        formatStr(settings.scheduledLeaders[1], node.OFFSET)}</span>`; // sch passed
+    case SearchItemType.DL:
+      return `<span class="lvl2">${node.OFFSET ?
+        node.OFFSET < 0 ? formatStr(settings.deadlineLeaders[1], -node.OFFSET) : // dl passed
+          formatStr(settings.deadlineLeaders[2], node.OFFSET) : // dl approaching
+        node.DEADLINE.hs ? hourTmpl(node.DEADLINE) : settings.deadlineLeaders[0]}</span>`; // dl today
+    case SearchItemType.STAMP: return `<span>${hourTmpl(node.STAMP)}</span>`;
+    case SearchItemType.ISTAMP: return "[ ";
     default: return "";
     }
   };
 
-  const agendaItemTmpl = (node, settings, isToday) =>
-    $.singleLine`<pre>
-      <button>${$.formatStr(" %-8c", node.cat)}</button>
-      <a href="#notes#${node.fid}#${node.id}">
-        <span>${timeTmpl(node, settings, isToday)}</span>
-        ${node.range ? `(${node.range}): ` : ""}
-        ${node.todo ? `<span class="todo todo-${node.todo}">${node.todo}</span>` : ""}
-        ${node.pri ? `<span class="pri">[#${node.pri}]</span>` : ""}
-        <span class="title">${$.markup(node.title)}</span>
-      </a>
-    </pre>`;
+  const agendaItemTmpl = (node, settings) => singleLine`
+  <li data-url="#notes#${node.FILEID}#${node.ID}">
+    <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
+    <span>
+    ${timeTmpl(node, settings)}
+    ${node.RANGE ? `(${node.RANGE}): ` : ""}
+    ${node.TODO ? `<span class="orgtodo ${node.TODO}">${node.TODO} </span>` : ""}
+    ${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}
+    <span class="title">${markup(node.TITLE)}</span>
+    </span>
+  </li>`;
 
-  const tagItemTmpl = (node, settings) =>
-    $.singleLine`<pre>
-      <button>${$.formatStr(" %-8c", node.cat)}</button>
-      <a href="#notes#${node.fid}#${node.id}">
-        ${node.todo ? `<span class="todo todo-${node.todo}">${node.todo}</span>` : ""}
-        ${node.pri ? `<span class="pri">[#${node.pri}]</span>` : ""}
-        <span class="title">${$.markup(node.title)}</span>
-      </a>
-    </pre>`;
+  const tagItemTmpl = (node) => singleLine`
+  <li data-url="#notes#${node.FILEID}#${node.ID}">
+    <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
+    <span>
+    ${node.TODO ? `<span class="todo ${node.TODO}">${node.TODO} </span>` : ""}
+    ${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}
+    <span class="title">${markup(node.TITLE)}</span>
+    </span>
+  </li>`;
 
   const itemTmpl = {
-    agenda: (searchResult, settings) => searchResult.slots.map((slot) => {
-      let date = new Date(slot.ml);
-      let archiveRE = ORG.Parser.archiveRE;
-      // ${ORG.icon("add", {size: 30, color: "#0ff"})}
-      return $.singleLine`<div class="orgsearchslot">
-        <pre class="header${(slot.today || !(date.getDay() % 6)) ? " b" : ""}">
-        ${calendar.days[date.getDay()] + " " + date.getDate() + " " + calendar.months[date.getMonth()] + " " + date.getFullYear()}
-        </pre>
-        ${ORG.Sorter.sort(slot.nodes.filter((node) =>
-    settings["todo-keywords"].indexOf(node.todo) <= settings["todo-keywords"].indexOf("|") &&
-        !node.itag.match(archiveRE)), settings["agenda-sorting-strategy"]).map((node) =>
-    agendaItemTmpl(node, settings, slot.today)).join("")
-  }</div > `;
-    }).join(""),
-
-    tags: (searchResult, settings) => {
-      let archiveRE = ORG.Parser.archiveRE;
-      return `<div class="orgsearchslot" >
-        <pre class="header">${$.htmlEncode(searchResult.header)}</pre>
-        ${ searchResult.nodes.filter((node) => !node.itag.match(archiveRE)).map((node) => tagItemTmpl(node, settings)).join("")}
-      </div > `;
+    "agenda": (nodes, uisettings) => {
+      const date = new Date(nodes.ml);
+      return `<li class="orgsearchslot${nodes.today || !(date.getDay() % 6) ? " b" : ""}"><span>${uisettings.days[date.getDay()] + " " + date.getDate() + " " + uisettings.months[date.getMonth()] + " " + date.getFullYear()}<span></li>
+      ${nodes.map((node) => agendaItemTmpl(node, uisettings)).join("")}`;
     },
-    search: (searchResult, settings) => itemTmpl.tags(searchResult, settings),
+
+    "search": (nodes) => `<li class="orgsearchslot"><span>${$.htmlEncode(nodes.header)}</span>${nodes.map((node) => tagItemTmpl(node)).join("")}</div>`
+  };
+
+  const events = {
+    "cycle": ($li) => {
+      let $next = $li;
+      const displayFn = $li.hasClass("collapsed") ? "show" : "hide";
+      $li[displayFn === "hide" ? "addClass" : "removeClass"]("collapsed");
+      while (($next = $next.next()) && $next[0] && !$next.hasClass("orgsearchslot")) {
+        $next[displayFn]();
+      }
+      return $li;
+    },
+    "open": ($li) => {
+      const $allA = $li.find("a");
+
+      if ($allA.length) {
+        $li.closest(".orgpage").orgNotify({
+          "items": [{
+            "name": "Goto Heading",
+            "fn": () => ORG.route($li.data("url")),
+          }].concat($allA.toArray().map((anchor) => ({
+            "name": `Open Link: "${anchor.text}"`,
+            "fn": () => ORG.route(anchor.href),
+          })))
+        });
+      } else {
+        ORG.route($li.data("url"));
+      }
+      return $li;
+    },
   };
 
   const init = ($container) => {
-    let moveCursor = (fn, headerFlag) => {
-      let $selected = $container.find(".select");
-      let $headings = $container.find((headerFlag && $selected.hasClass("header")) ? ".header" : "pre:visible");
+    const moveCursor = (fn, headerFlag) => {
+      const $selected = $container.find(".select");
+      const $headings = $container.find(headerFlag && $selected.hasClass("header") ? ".header" : "pre:visible");
       let index = $headings.index($selected);
       $headings.eq(fn ? --index : ++index % $headings.length).mark($selected);
       return false;
     };
-    let filter = () => {
-      let filterData = $container.data("filter");
-      let $allPre = $container.find("pre:not(.header)");
+
+    const filter = () => {
+      const filterData = $container.data("filter");
+      const $allPre = $container.find("pre:not(.header)");
+
       if (filterData.cat) {
         delete filterData.cat;
         $allPre.show();
       } else {
-        let $target = $container.find(".select button");
+        const $target = $container.find(".select button");
+
         if ($target[0]) {
-          let filter = $target.text().trim();
+          const filter = $target.text().trim();
           filterData.cat = filter;
           $allPre.each((i, pre) => {
-            let $pre = $(pre);
+            const $pre = $(pre);
             $pre.find("button").text().trim() !== filter && $pre.hide();
           });
         }
@@ -97,83 +114,82 @@
       $container.data("filter", filterData);
       return false;
     };
-    let events = {
-      cycle: ($pre) => $pre.parent().toggleClass("collapsed"),
-      open: ($pre) => {
-        let $allA = $pre.find("a");
-        if ($allA.length === 1) ORG.route($allA.attr("href"));
-        else if ($allA.length > 1) {
-          $container.orgContext([{
-            name: "Goto Heading",
-            fn: () => ORG.route($allA[0].hash),
-          }].concat($allA.toArray().slice(1).map((a) => ({
-            name: `Open Link: "${a.text}"`,
-            fn: () => ORG.route(a.href),
-          }))), () => $container.find(".select").scrollTo());
-        }
-        return false;
-      },
-    };
-    if (!$.isMobile()) {
-      $(document).orgKeyboard({
-        "return": () => events.open($container.find(".select")),
-        "o": () => events.open($container.find(".select")),
-        "tab": () => {
-          let $selected = $container.find(".select");
-          return events[$selected[0].classList.contains("header") ? "cycle" : "open"]($selected);
-        },
-        "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-        "ctrl+l": () => $container.find(".select").scrollCycle(),
-        "b": () => moveCursor("prev", 1),
-        "f": () => moveCursor(0, 1),
-        "n": () => moveCursor(),
-        "down": () => moveCursor(),
-        "p": () => moveCursor("prev"),
-        "up": () => moveCursor("prev"),
-        "u": () => {
-          let $selected = $container.find(".select");
-          return $selected.prevAll(".header").mark($selected);
-        },
-        "<": filter,
-        "alt+<": () => $container.find("pre").first().mark(),
-        "alt+shift+<": () => $container.find("pre").last().mark(),
-      });
-    }
-    return $container.data("filter", {}).on("click", "pre", function() {
-      return events[this.classList.contains("header") ? "cycle" : "open"]($(this).mark());
-    }).on("click", "button", (ev) => {
-      $(ev.target).closest("pre").mark();
-      filter();
+
+
+    /*
+     * if (!ORG.Utils.isMobile) {
+     *   $(document).orgKeyboard({
+     *     "return": () => events.open($container.find(".select")),
+     *     "o": () => events.open($container.find(".select")),
+     *     "tab": () => {
+     *       const $selected = $container.find(".select");
+     *       return events[$selected[0].classList.contains("header") ? "cycle" : "open"]($selected);
+     *     },
+     *     "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
+     *     "ctrl+l": () => $container.find(".select").scrollCycle(),
+     *     "b": () => moveCursor("prev", 1),
+     *     "f": () => moveCursor(0, 1),
+     *     "n": () => moveCursor(),
+     *     "down": () => moveCursor(),
+     *     "p": () => moveCursor("prev"),
+     *     "up": () => moveCursor("prev"),
+     *     "u": () => {
+     *       const $selected = $container.find(".select");
+     *       return $selected.prevAll(".header").mark($selected);
+     *     },
+     *     "<": filter,
+     *     "alt+<": () => $container.find("pre").first().mark(),
+     *     "alt+shift+<": () => $container.find("pre").last().mark(),
+     *   });
+     * }
+     */
+    return $container.on("click", "li", function () {
+      const $li = $(this);
+      events[$li.hasClass("orgsearchslot") ? "cycle" : "open"]($li).cursor();
       return false;
-    });
+    }).on("click", "button", (ev) => {
+      filter();
+      $(ev.target).closest("li").cursor();
+      return false;
+    }).on("click", ".orglink", (ev) => ev.preventDefault());
   };
 
-  $.fn.orgSearch = function(searchPlan) {
-    let files = Object.keys(ORG.Store.getFileNames());
-    let settings = ORG.Settings.getSettings();
-    searchPlan = searcher.compile(searchPlan, settings);
-    for (let i = 0, nfiles = files.length; i < nfiles; i++) {
-      searchPlan = searcher.search(ORG.Store.getFile(files[i], settings), searchPlan, settings);
-    }
-    let curSettings = {
-      "agenda-deadline-leaders": $.shellSplit(settings["agenda-deadline-leaders"]),
-      "agenda-scheduled-leaders": $.shellSplit(settings["agenda-scheduled-leaders"]),
-      "agenda-sorting-strategy": settings["agenda-sorting-strategy"],
-      "todo-faces": ORG.Settings.getTodoFaces(settings),
-      "todo-keywords": ORG.Settings.getTodoKeywords(settings, {}),
+  $.fn.orgSearch = function (searchPlan) {
+    const settings = ORG.Settings.getSettingsObj();
+    const uiSettings = {
+      "deadlineLeaders": ORG.Utils.quoteSplit(settings["agenda-deadline-leaders"]),
+      "scheduledLeaders": ORG.Utils.quoteSplit(settings["agenda-scheduled-leaders"]),
+      "days": ORG.Calendar.getDayNames(),
+      "months": ORG.Calendar.getMonthNames(),
+      "todoKeywords": ORG.Settings.getTodoKeywords(settings, {}),
     };
-    return init(this.removeData().off().empty().append(
-      ORG.Settings.getStyles(curSettings),
+    const nodes = search(searchPlan, ORG.Store, settings)
+      .map((slot) => ORG.Sorter.sort(
+        slot,
+        slot["sorting-strategy"] || settings["agenda-sorting-strategy"])
+      );
+    const $search = init(this.removeData().off().empty().append(
       $(document.createElement("div")).orgNavbar({
-        cycle: () => {
-          let $allSlots = this.find(".orgsearchslot");
-          $allSlots[$allSlots.first().hasClass("collapsed") ? "removeClass" : "addClass"]("collapsed");
+        "org": {"type": ICONTYPE.ICON, "fn": "#"},
+        "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
+        "title": {
+          "type": searchPlan[0].type === "agenda" ? "Agenda" : "Search Results",
         },
-        // add: "#capture",
-        // filter: function() { },
-        title: searchPlan[0].type === "agenda" ? "Agenda" : "Search Results",
-      }),
-      searchPlan.map((result) => itemTmpl[result.type](result, curSettings))
-    ).find("pre").first().addClass("select").end().end(), settings);
+        "cycle": {
+          "type": ICONTYPE.ICON,
+          "fn": () => {
+            const $allSlots = this.find(".orgsearchslot");
+            $allSlots[$allSlots.eq(0).hasClass("collapsed") ? "addClass" : "removeClass"]("collapsed")
+              .each((idx, li) => events.cycle($(li)));
+          }
+        }
+      }).addClass("flex"),
+      `<ul class="orgsearch orglist${ORG.Utils.isMobile ? " nocursor" : ""}">
+      ${nodes.map((slot) => itemTmpl[slot.type](slot, uiSettings)).join("")}
+      <ul>`,
+      ORG.Settings.getStyles()
+    ).find("li:first-child").cursor().end());
+
+    return $search;
   };
 })();

@@ -16,14 +16,14 @@
     },
     "priority": (n1, n2) => (n1.PRI || "B").charCodeAt() - (n2.PRI || "B").charCodeAt(),
     "time": (n1, n2) => {
-      const typeDiff = n2.TYPE - n1.TYPE;
-      if (typeDiff) return typeDiff;
       const n1offset = n1.OFFSET;
       const n2offset = n2.OFFSET;
       const n2hs = n2.STAMP && n2.STAMP.hs;
       if (!n2offset && n1offset && n2hs) return -1;
       const n1hs = n1.STAMP && n1.STAMP.hs;
       if (!n1offset && n2offset && n1hs) return 1;
+      const typeDiff = n2.TYPE - n1.TYPE;
+      if (typeDiff) return typeDiff;
       return n1offset - n2offset || (n1hs ? n2hs ? n1hs < n2hs ? 1 : -1 : 1 : n2hs ? -1 : 0);
     },
     "todo": (n1, n2) => n2.TODOIDX - n1.TODOIDX,

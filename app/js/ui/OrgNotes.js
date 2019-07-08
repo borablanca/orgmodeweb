@@ -1,6 +1,7 @@
 (() => {
-  const writeTimestamp = ORG.Writer.writeTimestamp;
-  const {parseDrawers, archiveRE} = ORG.Parser;
+  const {writeTimestamp} = ORG.Writer;
+  const {parseDrawers} = ORG.Parser;
+  const {archiveRE} = ORG.Searcher;
   const {icon, ICONTYPE} = ORG.Icons;
   const {markup} = ORG.Utils;
 
@@ -14,11 +15,11 @@
   <div>:PROPERTIES:</div>
   ${propKeys.map((key) => `<div><span>:${key}: </span><span>${markup(node.PROPS[key])}</span></div>`).join("")}
   <div>:END:</div></div>` : ""}
-  ${node.TEXT.length ? `<pre class="txt">${parseDrawers(node.TEXT.map((text) => markup(text)))}</pre>` : ""}</div>`;
+  ${node.TEXT.length ? `<pre class="txt">${parseDrawers(node.TEXT)}</pre>` : ""}</div>`;
   };
 
-  const itemTmpl = (node, body = 1, collapsed = 0) => `<li class="${collapsed ? "collapsed " : ""}${body ? "updated " : ""}lvl${node.LVL % 3}${node.TAGS && node.TAGS.match(archiveRE) ? " archive" : ""}" style="padding-left:${(node.LVL - 1) * 15 + 24}px" data-lvl="${node.LVL}">
-  <div class="title">${node.TODO ? `<span class="orgtodo ${node.TODO.toLowerCase()}">${node.TODO} </span>` : ""}${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}${node.TITLE ? `<span>${markup(node.TITLE)}</span>` : ""}${node.TAGS ? `<span class="tag">${markup(node.TAGS)}</span>` : ""}</div>
+  const itemTmpl = (node, body = 1, collapsed = 0) => `<li class="${collapsed ? "collapsed " : ""}${body ? "orgupdated " : ""}lvl${node.LVL % 3}${archiveRE.test(node.TAGS) ? " orgarchive" : ""}" style="padding-left:${(node.LVL - 1) * 15 + 24}px" data-lvl="${node.LVL}">
+  <div class="title">${node.TODO ? `<span class="orgtodo ${node.TODO}">${node.TODO} </span>` : ""}${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}${node.TITLE ? `<span>${markup(node.TITLE)}</span>` : ""}${node.TAGS ? `<span class="tag">${markup(node.TAGS)}</span>` : ""}</div>
   ${body ? `<div class="body">${itemBodyTmpl(node)}</div>` : ""}
   </li>`;
 
@@ -38,14 +39,16 @@
   };
 
   const updateHeadingBody = ($li) => {
-    if (!$li.hasClass("updated")) {
-      $li.addClass("updated").append(itemBodyTmpl($li.data("node")));
+    if (!$li.hasClass("orgupdated")) {
+      $li.addClass("orgupdated").append(itemBodyTmpl($li.data("node")));
       for (
         let lvl = $li.data("lvl"), $next = $li.next(), nlvl = $next.data("lvl");
         nlvl > lvl;
         $next = $next.next(), nlvl = $next.data("lvl")
       ) {
-        $next.addClass("updated").append(itemBodyTmpl($next.data("node")));
+        if (!$next.hasClass("orgupdated")) {
+          $next.addClass("orgupdated").append(itemBodyTmpl($next.data("node")));
+        }
       }
     }
     return $li;
@@ -126,17 +129,13 @@
       return $prev;
     },
     "edit": ($li) => {
-      $li.closest(".orgpage").find(".inedit").each((idx, node) => {
-        const $item = $(node);
-        const itemNode = $item.data("node");
-        $(itemTmpl(itemNode)).data("node", itemNode).replaceAll($item);
-      });
+      $li.closest(".orgnotes").find(".inedit .orgicon.close").click();
       const node = $li.data("node");
       return $(editTmpl(node)).data("node", node).replaceAll($li);
     },
     "save": ($container) => {
       let file = $container.data("file");
-      const allText = $(".orgbuffertext pre").text();
+      const allText = $(".orgbuffertext pre").html().replace(/<br\/?>/g, "\n");
 
       try {
         file.sync.stat = ORG.Store.SyncStatus.MODIFIED;
@@ -355,16 +354,25 @@
           "fn": () => {
             const $allLi = this.find(".orgnotes>li").slice(1);
 
-            if (!$allLi.eq(0).hasClass("collapsed")) {
-              $allLi.addClass("collapsed").filter(function () {
-                return $(this).data("lvl") > 1;
-              }).hide();
-            } else if ($allLi.eq(1).hasClass("collapsed")) {
-              $allLi.removeClass("collapsed").filter(function () {
-                return $(this).data("lvl") == 2;
-              }).addClass("collapsed").show();
+            if ($allLi.eq(0).hasClass("collapsed")) {
+              $allLi.each((idx, li) => {
+                const $li = $(li);
+                const lvl = $li.data("lvl");
+                $li.removeClass("collapsed");
+                if (lvl == 1) {
+                  updateHeadingBody($li);
+                } else if (lvl == 2) {
+                  $li.addClass("collapsed").show();
+                }
+              });
             } else {
-              $allLi.removeClass("collapsed").show();
+              $allLi.each((idx, li) => {
+                const $li = $(li).addClass("collapsed");
+
+                if ($li.data("lvl") > 1) {
+                  $li.hide();
+                }
+              });
             }
             return false;
           }
@@ -380,7 +388,7 @@
         "NOTE": {"type": ICONTYPE.TEXT, "fn": ""}
       }).addClass("gridrow"),
       `<ul class="orgnotes orglist orgview">
-      <li class="orgbuffertext"><pre>${nodes.TEXT || "\n"}</pre></li>
+      <li class="orgbuffertext"><pre>${markup(nodes.TEXT) || "\n"}</pre></li>
       ${nodes.map((node) => itemTmpl(node, 0, 1)).join("")}
       </ul>`,
       nodes.length ? "" : "<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div></div>",
@@ -395,7 +403,11 @@
       if (node.LVL > 1) $this.hide();
     });
     if (nodeId) {
-      $orgNotes.find(`.orglist > li:nth-child(${nodeId})`).cursor().cycle();
+      updateHeadingBody($orgNotes.find(`.orglist > li:nth-child(${+nodeId + 2})`))
+        .cursor()
+        .cycle()
+        .show()
+        .scrollTo();
     } else {
       $orgNotes.find(`.orglist > li:nth-child(${1})`).cursor();
     }

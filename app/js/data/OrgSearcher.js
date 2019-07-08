@@ -6,6 +6,7 @@
   const orgEscapeRE = /[[\]{}()*?.,\\^$]/g;
   const orgTagSplitGRE = /(?:(\+|-|)([^+-\s]+))/g;
   const orgTagDelimiterPropRE = /^([^<>=]+)(?:(<>|<=|<|>=|>|=)([^<>"]+))?$/;
+  const archiveRE = /:ARCHIVE:/;
   const SearchItemType = {
     "SCH": 0,
     "ISTAMP": 1,
@@ -183,15 +184,15 @@
     "today": startMl === new Date().setHours(0, 0, 0, 0),
   });
 
-  const generateSlots = (slotPlans = [], allFileNames, opts) => {
+  const generateSlots = (slotPlans = [], fileIdList, opts) => {
     const todayMl = new Date().setHours(0, 0, 0, 0);
     const slots = Object.assign([], {todayMl});
-    const activeFileNames = new Set();
+    const activeFilesIdx = new Set();
 
     for (let slot = 0, nslot = slotPlans.length, curPlan; slot < nslot;) {
       curPlan = slotPlans[slot++];
-      (curPlan["agenda-files"] ? ORG.Utils.quoteSplit(curPlan["agenda-files"]) : allFileNames)
-        .forEach((fileName) => activeFileNames.add(fileName));
+      (curPlan["agenda-files"] ? ORG.Utils.quoteSplit(curPlan["agenda-files"]) : fileIdList)
+        .forEach((fileId) => activeFilesIdx.add(fileId));
 
       if (curPlan.type === "agenda") {
         const span = !isNaN(curPlan["agenda-span"]) && curPlan["agenda-span"] || !isNaN(opts["agenda-span"]) && opts["agenda-span"] || 7;
@@ -203,7 +204,7 @@
         slots.push(createSlot(curPlan));
       }
     }
-    return {"slots": slots, "activeFileNames": Array.from(activeFileNames)};
+    return {"slots": slots, "activeFilesIdx": Array.from(activeFilesIdx)};
   };
 
   const matchRules = (slot, searchNode, globOpts) => {
@@ -216,8 +217,7 @@
       !slot.re ||
       slot.re.test(
         searchNode.TITLE +
-        searchNode.TEXT.join("") +
-        Object.values(searchNode.PROPS).join("")
+        searchNode.TEXT.concat(Object.values(searchNode.PROPS)).join("")
       )
     ) {
       if (!nrules) return true;
@@ -247,66 +247,70 @@
       "ranges": []
     };
 
-    if (
-      slot.type === "agenda" &&
-      (!slot.rules.length || matchRules(slot, searchNode, globOpts))
-    ) {
-      sml = slot.ml;
-      if (curStmp = searchNode.DEADLINE) { // DEADLINE exists
-        ml = curStmp.ml;
-        if (curStmp.r && curStmp.rmin && sml >= ml) { // repeater exists and slot is later
-          fits.offset = repeatOffset(curStmp.rmin, ml, sml);
-          fits[SearchItemType.DL] = (!fits.offset || slot.today) && curStmp;
-        } else { // no repeater or slot is before than node
-          const offset = (sml - ml) / DAY;
-          if (offset === 0) fits[SearchItemType.DL] = curStmp;
-          if (slot.today &&
-            (offset > 0 || offset < 0 && ml <= timeStr2Ml((curStmp.w || slot["deadline-warning-days"] || globOpts["deadline-warning-days"] || 14) + "d", sml))) {
-            fits[SearchItemType.DL] = curStmp;
-            fits.offset = offset;
-          }
-        }
-      } else if (curStmp = searchNode.SCHEDULED) { // SCHEDULE exists
-        const nodeProps = searchNode.PROPS;
-        ml = curStmp.ml;
-        if (sml === ml && !curStmp.w && // slot matches node and no delay
-          (slot.today || nodeProps.STYLE !== "habit")) {
-          fits[SearchItemType.SCH] = curStmp;
-        } else if (sml >= (curStmp.w ? timeStr2Ml(curStmp.w, ml) : ml) && // slot is later than node (plus delay if exist)
-          (!(nodeProps && nodeProps.STYLE === "habit") ||
-            slot.today || // if habit, should be today or setting show all days
-            !(slot["show-habits-only-for-today"] || globOpts["show-habits-only-for-today"]))) {
-          if (curStmp.r && curStmp.rmin) { // repeat exist
-            fits.offset = repeatOffset(curStmp.rmin, ml, sml);
-            fits[SearchItemType.SCH] = (!fits.offset || slot.today) && curStmp;
-          } else if (slot.today) { // no repeat and slot is today
-            fits[SearchItemType.SCH] = curStmp;
-            fits.offset = (sml - ml) / DAY;
-          }
-        }
-      }
-      if (nstmps = searchNode.STMPS.length) { // TIMESTAMP exists
-        for (let stmp = 0; stmp < nstmps;) {
-          curStmp = searchNode.STMPS[stmp++];
+    if (slot.type === "agenda") {
+      if (
+        !searchNode.ISDONE &&
+        (!slot.rules.length || matchRules(slot, searchNode, globOpts)) &&
+        !archiveRE.test(searchNode.TAGS)
+      ) {
+        sml = slot.ml;
+        if (curStmp = searchNode.DEADLINE) { // DEADLINE exists
           ml = curStmp.ml;
-          nml = curStmp.n ? curStmp.n.ml : null;
-          if (ml === sml || nml && nml >= sml && ml <= sml) { // slot matches stamp or slot inside the range
-            fits[SearchItemType.STAMP].push(curStmp);
-            fits.ranges.push(nml ?
-              (sml - ml) / DAY + 1 + "/" + ((nml - ml) / DAY + 1) :
-              "");
-          } else if (curStmp.r && curStmp.rmin) { // repeater if exists
-            if (repeatOffset(curStmp.rmin, ml, sml) === 0) fits[SearchItemType.STAMP].push(curStmp);
+          if (curStmp.r && curStmp.rmin && sml >= ml) { // repeater exists and slot is later
+            fits.offset = repeatOffset(curStmp.rmin, ml, sml);
+            fits[SearchItemType.DL] = (!fits.offset || slot.today) && curStmp;
+          } else { // no repeater or slot is before than node
+            const offset = (sml - ml) / DAY;
+            if (offset === 0) fits[SearchItemType.DL] = curStmp; // eslint-disable-line max-depth
+            if (slot.today && // eslint-disable-line max-depth
+              (offset > 0 || offset < 0 && ml <= timeStr2Ml((curStmp.w || slot["deadline-warning-days"] || globOpts["deadline-warning-days"] || 14) + "d", sml))) {
+              fits[SearchItemType.DL] = curStmp;
+              fits.offset = offset;
+            }
+          }
+        } else if (curStmp = searchNode.SCHEDULED) { // SCHEDULE exists
+          const nodeProps = searchNode.PROPS;
+          ml = curStmp.ml;
+          if (sml === ml && !curStmp.w && // slot matches node and no delay
+            (slot.today || nodeProps.STYLE !== "habit")) {
+            fits[SearchItemType.SCH] = curStmp;
+          } else if (sml >= (curStmp.w ? timeStr2Ml(curStmp.w, ml) : ml) && // slot is later than node (plus delay if exist)
+            (!(nodeProps && nodeProps.STYLE === "habit") ||
+              slot.today || // if habit, should be today or setting show all days
+              !(slot["show-habits-only-for-today"] || globOpts["show-habits-only-for-today"]))) {
+            if (curStmp.r && curStmp.rmin) {  // eslint-disable-line max-depth
+              // repeat exist
+              fits.offset = repeatOffset(curStmp.rmin, ml, sml);
+              fits[SearchItemType.SCH] = (!fits.offset || slot.today) && curStmp;
+            } else if (slot.today) { // no repeat and slot is today
+              fits[SearchItemType.SCH] = curStmp;
+              fits.offset = (sml - ml) / DAY;
+            }
           }
         }
-      }
-      if ((slot["agenda-include-inactive-timestamps"] ||
-        globOpts["agenda-include-inactive-timestamps"]) &&
-        (nstmps = searchNode.ISTMPS.length)) { // INACTIVE TIMESTAMP exists
-        for (let stmp = 0; stmp < nstmps;) {
-          curStmp = searchNode.ISTMPS[stmp++];
-          if (curStmp.ml === sml) { // slot matches istamp
-            fits[SearchItemType.ISTAMP].push(curStmp);
+        if (nstmps = searchNode.STMPS.length) { // TIMESTAMP exists
+          for (let stmp = 0; stmp < nstmps;) {
+            curStmp = searchNode.STMPS[stmp++];
+            ml = curStmp.ml;
+            nml = curStmp.n ? curStmp.n.ml : null;
+            if (ml === sml || nml && nml >= sml && ml <= sml) { // slot matches stamp or slot inside the range
+              fits[SearchItemType.STAMP].push(curStmp);
+              fits.ranges.push(nml ?
+                (sml - ml) / DAY + 1 + "/" + ((nml - ml) / DAY + 1) :
+                "");
+            } else if (curStmp.r && curStmp.rmin) { // repeater if exists
+              if (repeatOffset(curStmp.rmin, ml, sml) === 0) fits[SearchItemType.STAMP].push(curStmp);
+            }
+          }
+        }
+        if ((slot["agenda-include-inactive-timestamps"] ||
+          globOpts["agenda-include-inactive-timestamps"]) &&
+          (nstmps = searchNode.ISTMPS.length)) { // INACTIVE TIMESTAMP exists
+          for (let stmp = 0; stmp < nstmps;) {
+            curStmp = searchNode.ISTMPS[stmp++];
+            if (curStmp.ml === sml) { // slot matches istamp
+              fits[SearchItemType.ISTAMP].push(curStmp);
+            }
           }
         }
       }
@@ -360,20 +364,26 @@
     SearchItemType,
     "search": (searchPlan, fileProvider, opts) => { // eslint-disable-line max-statements
       const parseFile = ORG.Parser.parseFile;
-      const {slots, activeFileNames} = generateSlots(searchPlan, fileProvider.getFileNames(), opts);
+      const fileList = fileProvider.getFileList();
+      const fileIdList = fileList.map((file) => file.id);
+      const fileListAsObj = fileList.reduce((obj, file) => {
+        obj[file.id] = file;
+        return obj;
+      }, {});
+      const {slots, activeFilesIdx} = generateSlots(searchPlan, fileIdList, opts);
 
       for (
-        let fileIdx = 0, nfiles = activeFileNames.length, fileName, headings, todoSeperatorIdx;
+        let fileIdx = 0, nfiles = activeFilesIdx.length, file, headings, todoSeperatorIdx;
         fileIdx < nfiles;
       ) {
-        fileName = activeFileNames[fileIdx++];
-        headings = parseFile(fileName, fileProvider.getFile(fileName), opts);
+        file = fileListAsObj[activeFilesIdx[fileIdx++]];
+        headings = parseFile(file.name, fileProvider.getFileContents(file.id), opts);
         todoSeperatorIdx = headings.TODO.indexOf("|");
 
         for (
-          let nodeIdx = 0, nnodes = headings.length, fid = headings.FILENAME,
+          let nodeIdx = 0, nnodes = headings.length, fid = file.id,
             lvl, todoIdx, searchNode, heading,
-            categoryStack = [{"lvl": 0, "cat": headings.CATEGORY || fid}],
+            categoryStack = [{"lvl": 0, "cat": headings.CATEGORY || file.name}],
             tagStack = [{"lvl": 0, "tag": ""}];
           nodeIdx < nnodes;
           nodeIdx++
@@ -409,13 +419,14 @@
           });
           for (let slotIdx = 0, nslots = slots.length, slot; slotIdx < nslots;) {
             slot = slots[slotIdx++];
-            if (!slot["agenda-files"] || slot["agenda-files"].indexOf(fileName) > -1) {
+            if (!slot["agenda-files"] || slot["agenda-files"].indexOf(fid) > -1) {
               fillSlot(slot, searchNode, opts);
             }
           }
         }
       }
       return slots;
-    }
+    },
+    archiveRE
   };
 })();

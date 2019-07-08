@@ -67,4 +67,11 @@ QUnit.module("OrgNotes Tests", (hooks) => {
     $(".orgnotes li + li").click();
     assert.equal($(".orgnotes li + li .collapsible").length, 1);
   });
+
+  QUnit.test("buffer text", (assert) => {
+    const file = createFile("file1", "\ntext\nmoretext\n\n* node");
+    $("#qunit-fixture").orgNotes(file);
+    const $pre = $(".orgnotes .orgbuffertext pre", "#qunit-fixture");
+    assert.equal($pre.html(), "text<br>moretext<br>");
+  });
 });

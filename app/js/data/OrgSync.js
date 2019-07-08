@@ -6,6 +6,7 @@
   const UnknownPathError = "Can't sync file";
   const AuthorizationError = "Unauthorized Dropbox account!";
 
+  // check dropbox token at start
   ((match) => {
     if (match) {
       store.setToken(store.Tokens.Dropbox, match[1]);
@@ -13,53 +14,50 @@
     }
   })(location.hash.match(/access_token=([^&]*)/));
 
-  const getDropbox = () => {
-    const token = store.getToken(store.Tokens.Dropbox);
-    if (token) return new Dropbox.Dropbox({"accessToken": token});
-    location.href = new Dropbox.Dropbox({"clientId": "h3xyb8gqqxvounb"}).getAuthenticationUrl("http://localhost:3000");
-    return null;
-  };
+  const DropboxFns = {
+    "getDropbox": () => {
+      const token = store.getToken(store.Tokens.Dropbox);
+      if (token) return new Dropbox.Dropbox({"accessToken": token});
+      location.href = new Dropbox.Dropbox({"clientId": "h3xyb8gqqxvounb"}).getAuthenticationUrl("http://localhost:3000");
+      return null;
+    },
 
+    /**
+     *
+     * @param {string} filePath path of the file in dropbox
+     * @param {function} successFn callback fn to call after getting the file
+     * @param {function} failFn error fn to call if error occurs
+     */
+    "fetchFile": (filePath, successFn, failFn) => {
+      if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
+      const dbox = DropboxFns.getDropbox();
+      if (!dbox) return failFn(NotLinkedError);
+      return dbox.filesDownload({"path": filePath}).then((metadata) => {
+        const reader = new FileReader();
+        reader.addEventListener("loadend", (loadEndObj) => successFn(loadEndObj.target.result, metadata));
+        reader.readAsText(metadata.fileBlob);
+      }).catch(() => failFn(ConnectionError));
+    },
 
-  /**
-   *
-   * @param {string} filePath path of the file in dropbox
-   * @param {function} successFn callback fn to call after getting the file
-   * @param {function} failFn error fn to call if error occurs
-   */
-  const fetchFile = (filePath, successFn, failFn) => {
-    if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
-    const dbox = getDropbox();
-    if (!dbox) return failFn(NotLinkedError);
-    return dbox.filesDownload({"path": filePath}).then((metadata) => {
-      const reader = new FileReader();
-      reader.addEventListener("loadend", (loadEndObj) => successFn(loadEndObj.target.result, metadata));
-      reader.readAsText(metadata.fileBlob);
-    }).catch(() => failFn(ConnectionError));
-  };
-
-  /**
-   *
-   * @param {*} filePath path of the file in dropbox
-   * @param {*} fileText file contents
-   * @param {*} successFn callback fn to call after fetching file list from dropbox
-   * @param {*} failFn error fn to call if error occurs
-   */
-  const uploadFile = (filePath, fileText, successFn, failFn) => {
-    if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
-    const dbox = getDropbox();
-    if (!dbox) return failFn(NotLinkedError);
-    return dbox.filesUpload({
-      "path": filePath,
-      "contents": fileText,
-      "mode": {".tag": "overwrite"},
-      "autorename": true,
-    }).then(successFn)
-      .catch(() => failFn(ConnectionError));
-  };
-
-  ORG.Dropbox = {
-    fetchFile,
+    /**
+     *
+     * @param {*} filePath path of the file in dropbox
+     * @param {*} fileText file contents
+     * @param {*} successFn callback fn to call after fetching file list from dropbox
+     * @param {*} failFn error fn to call if error occurs
+     */
+    "uploadFile": (filePath, fileText, successFn, failFn) => {
+      if (!filePath || !ORG.Utils.isString(filePath)) return failFn(UnknownPathError);
+      const dbox = DropboxFns.getDropbox();
+      if (!dbox) return failFn(NotLinkedError);
+      return dbox.filesUpload({
+        "path": filePath,
+        "contents": fileText,
+        "mode": {".tag": "overwrite"},
+        "autorename": true,
+      }).then(successFn)
+        .catch(() => failFn(ConnectionError));
+    },
 
     /**
      *
@@ -70,7 +68,7 @@
      */
     "getFileList": (folderPath, cursor, successFn, failFn) => { // eslint-disable-line consistent-return
       if (!ORG.Utils.isString(folderPath)) return failFn(UnknownPathError);
-      const dbox = getDropbox();
+      const dbox = DropboxFns.getDropbox();
       if (!dbox) return failFn(NotLinkedError);
       (cursor ? dbox.filesListFolderContinue({"cursor": cursor}) : dbox.filesListFolder({"path": folderPath, "include_media_info": true}))
         .then(successFn)
@@ -91,7 +89,7 @@
      */
     "syncFile": (file, successFn, failFn) => {
       if (file.sync.type !== ORG.Store.SyncType.DBOX) return failFn(NotLinkedError);
-      const dbox = getDropbox();
+      const dbox = DropboxFns.getDropbox();
       if (!dbox) return failFn(NotLinkedError);
       return dbox.filesGetMetadata({"path": file.sync.path}).then((fileMetaData) => {
         const modifiedDate = new Date(fileMetaData.server_modified).getTime();
@@ -107,10 +105,10 @@
           if (file.sync.stat) { // also client file is changed or conflicted
             successFn(SyncStatus.CONFLICT);
           } else { // update local file
-            fetchFile(file.sync.path, fetchSuccessFn, failFn);
+            DropboxFns.fetchFile(file.sync.path, fetchSuccessFn, failFn);
           }
-        } else if (file.sync === SyncStatus.MODIFIED) { // client file is changed
-          uploadFile(
+        } else if (file.sync.stat === SyncStatus.MODIFIED) { // client file is changed
+          DropboxFns.uploadFile(
             file.sync.path,
             ORG.Store.getFileContents(file.id),
             (metadata) => {
@@ -122,10 +120,23 @@
             failFn
           );
         } else {
-          fetchFile(file.sync.path, fetchSuccessFn, failFn);
+          DropboxFns.fetchFile(file.sync.path, fetchSuccessFn, failFn);
         }
       }).catch(() => failFn(UnknownPathError + " \"" + file.name + "\""));
     },
     "unlink": () => store.deleteToken(store.Tokens.Dropbox)
+  };
+
+  ORG.Sync = {
+    "fetchDropboxFile": DropboxFns.fetchFile,
+    "getDropboxFileList": DropboxFns.getFileList,
+    "unlinkDropbox": DropboxFns.unlink,
+    "syncFile": (file, successFn, failFn) => {
+      switch (file.sync.type) {
+      case ORG.Store.SyncType.DBOX:
+        return DropboxFns.syncFile(file, successFn, failFn);
+      default: throw "Unknown Server";
+      }
+    }
   };
 })();

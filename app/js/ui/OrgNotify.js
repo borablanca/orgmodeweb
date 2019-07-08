@@ -45,7 +45,7 @@ ${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
     }
 
     $notify
-      .on("click", (ev) => ev.target.nodeName !== "INPUT" && removeFn())
+      .on("click", (ev) => ev.target.nodeName !== "INPUT" && !plan.sticky && removeFn())
       .on("click", "*:not(input)", function (ev) {
         if (ev.target !== this) return true;
         if ($(this).hasClass("done")) {
@@ -53,7 +53,7 @@ ${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
         } else if (plan.cancel) {
           plan.cancel();
         }
-        removeFn();
+        if (!plan.sticky) removeFn();
         return false;
       })
       .appendTo(this)

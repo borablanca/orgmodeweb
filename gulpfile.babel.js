@@ -76,7 +76,7 @@ gulp.task("scripts", () => gulp.src(
     "./app/js/ui/OrgSettings.js",
     "./app/js/ui/OrgDropbox.js",
     "./app/js/ui/OrgSearch.js",
-    "./app/js/data/OrgDropbox.js",
+    "./app/js/data/OrgSync.js",
     "./app/js/ui/OrgNotes.js",
     "./app/js/data/OrgRouter.js",
   ])

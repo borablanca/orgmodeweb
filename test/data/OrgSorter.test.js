@@ -11,8 +11,8 @@ const tomorrow = `<${tomorrowDate.getFullYear()}-${("0" + (tomorrowDate.getMonth
 
 QUnit.module("OrgSorter Tests", () => {
   const fileProvider = {
-    "getFileNames": () => ["f1", "f2", "f3"],
-    "getFile": (fname) => ({
+    "getFileList": () => [{"id": "f1", "name": "f1"}, {"id": "f2", "name": "f2"}, {"id": "f3", "name": "f3"}],
+    "getFileContents": (fid) => ({
       "f1": `
 #+SEQ_TODO: TODO NEXT | DONE CANC
 
@@ -75,7 +75,7 @@ DEADLINE: ${yesterday} 11:00>
 DEADLINE: ${tomorrow}>
 * node 8
 DEADLINE: ${tomorrow} 12:00>`
-    })[fname]
+    })[fid]
   };
   QUnit.test("wrong sort strategies - empty string", (assert) => {
     const slots = search([{
