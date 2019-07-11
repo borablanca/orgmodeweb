@@ -293,11 +293,21 @@
             curStmp = searchNode.STMPS[stmp++];
             ml = curStmp.ml;
             nml = curStmp.n ? curStmp.n.ml : null;
-            if (ml === sml || nml && nml >= sml && ml <= sml) { // slot matches stamp or slot inside the range
+            if (ml === sml) { // slot matches stamp
               fits[SearchItemType.STAMP].push(curStmp);
-              fits.ranges.push(nml ?
-                (sml - ml) / DAY + 1 + "/" + ((nml - ml) / DAY + 1) :
-                "");
+              fits.ranges.push(nml ? "1/" + ((nml - ml) / DAY + 1) : "");
+            } else if (ml < sml && nml >= sml) { // slot inside the range
+              const rangeEnd = (nml - ml) / DAY + 1;
+
+              if (nml === sml) {
+                fits[SearchItemType.STAMP].push(curStmp.n);
+                fits.ranges.push(rangeEnd + "/" + rangeEnd);
+              } else {
+                fits[SearchItemType.STAMP].push(Object.assign({}, curStmp, {"hs": "", "he": ""}));
+                fits.ranges.push(nml ?
+                  (sml - ml) / DAY + 1 + "/" + rangeEnd :
+                  "");
+              }
             } else if (curStmp.r && curStmp.rmin) { // repeater if exists
               if (repeatOffset(curStmp.rmin, ml, sml) === 0) fits[SearchItemType.STAMP].push(curStmp);
             }
