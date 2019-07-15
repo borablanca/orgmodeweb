@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 (() => {
   const {writeTimestamp} = ORG.Writer;
   const {parseDrawers} = ORG.Parser;
@@ -7,14 +8,15 @@
 
   const itemBodyTmpl = (node) => {
     const propKeys = Object.keys(node.PROPS);
+    const days = ORG.Calendar.getDayNames();
     return `<div class="body">
-  ${node.CLOSED ? `<div class="cls">CLOSED: <span class="ts">${writeTimestamp(node.CLOSED, true)}</span></div>` : ""}
-  ${node.DEADLINE ? `<div class="dl">DEADLINE: <span class="ts">${writeTimestamp(node.DEADLINE)}</span></div>` : ""}
-  ${node.SCHEDULED ? `<div class="sch">SCHEDULED: <span class="ts">${writeTimestamp(node.SCHEDULED)}</span></div>` : ""}
-  ${propKeys.length ? `<div class="props collapsible collapsed">
-  <div>:PROPERTIES:</div>
-  ${propKeys.map((key) => `<div><span>:${key}: </span><span>${markup(node.PROPS[key])}</span></div>`).join("")}
-  <div>:END:</div></div>` : ""}
+  ${node.CLOSED ? `<div class="cls">CLOSED: <span class="ts">${writeTimestamp(node.CLOSED, days, 1)}</span></div>` : ""}
+  ${node.DEADLINE ? `<div class="dl">DEADLINE: <span class="ts">${writeTimestamp(node.DEADLINE, days)}</span></div>` : ""}
+  ${node.SCHEDULED ? `<div class="sch">SCHEDULED: <span class="ts">${writeTimestamp(node.SCHEDULED, days)}</span></div>` : ""}
+  ${propKeys.length ? `<div class="props collapsed">
+  <div class="collapsible">:PROPERTIES:</div>
+  ${propKeys.map((key) => `<div><span class="lvl2">:${key}: </span><span>${markup(node.PROPS[key])}</span></div>`).join("")}
+  <div class="orgdim">:END:</div></div>` : ""}
   ${node.TEXT.length ? `<pre class="txt">${parseDrawers(node.TEXT)}</pre>` : ""}</div>`;
   };
 
@@ -24,19 +26,27 @@
   </li>`;
 
   const editTmpl = (node = {"LVL": 1, "PROPS": {}, "TEXT": []}) => {
+    const days = ORG.Calendar.getDayNames();
     const todoTxt = (node.TODO ? `${node.TODO} ` : "") + (node.PRI ? `[#${node.PRI}] ` : "");
     let bodyTxt = "";
-    if (node.CLOSED) bodyTxt += `CLOSED: ${writeTimestamp(node.CLOSED)}\n`;
-    if (node.SCHEDULED) bodyTxt += `SCHEDULED: ${writeTimestamp(node.SCHEDULED)}\n`;
-    if (node.DEADLINE) bodyTxt += `DEADLINE: ${writeTimestamp(node.DEADLINE)}\n`;
+    if (node.CLOSED) bodyTxt += `CLOSED: ${writeTimestamp(node.CLOSED, days, 1)}\n`;
+    if (node.SCHEDULED) bodyTxt += `SCHEDULED: ${writeTimestamp(node.SCHEDULED, days)}\n`;
+    if (node.DEADLINE) bodyTxt += `DEADLINE: ${writeTimestamp(node.DEADLINE, days)}\n`;
     if (Object.keys(node.PROPS).length) bodyTxt += `:PROPERTIES:\n${Object.keys(node.PROPS).map((key) => `:${key}: ${node.PROPS[key]}`).join("\n")}\n:END:\n`;
     if (node.TEXT.length) bodyTxt += node.TEXT.join("\n");
     return `<li class="lvl${node.LVL % 3} border cf inedit" style="padding-left:${(node.LVL - 1) * 15 + 24}px" data-lvl="${node.LVL}">
  <input type="text" spellcheck="false" placeholder="note heading" value="${todoTxt + node.TITLE + (node.TAGS ? `    ${node.TAGS}` : "")}"/>
  <textarea spellcheck="false" placeholder="note body" rows="1">${bodyTxt}</textarea>
- ${icon("delete")}${icon("close")}${icon("done")}
+ ${node.TITLE ? icon("delete") : ""}${icon("close") + icon("done")}
 </li > `;
   };
+  const bufferTextTmpl = (node) => `<li class="orgbuffertext"><pre>${node.TEXT ? markup(node.TEXT) : ""}<br></pre></li>`;
+
+  const editBufferTextTmpl = (node) => `
+  <li class="orgbuffertext cf">
+   <textarea>${node.TEXT}</textarea>
+   ${icon("close")}${icon("done")}
+  </li>`;
 
   const updateHeadingBody = ($li) => {
     if (!$li.hasClass("orgupdated")) {
@@ -59,7 +69,9 @@
       const node = $li.data("node");
 
       if (node) {
-        return $(itemTmpl(node)).data("node", node).replaceAll($li);
+        return $(($li.hasClass("orgbuffertext") ? bufferTextTmpl : itemTmpl)(node))
+          .data("node", node)
+          .replaceAll($li);
       }
       let $newLi = $li.prev();
       $newLi = $newLi[0] ? $newLi : $li.next();
@@ -98,7 +110,7 @@
             const $orgnotes = $container.find(".orgnotes");
 
             if (!$orgnotes.find("li")[1] && !$orgnotes.find(".orgnotice")[0]) {
-              $orgnotes.append("<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div>");
+              $orgnotes.after("<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div>");
             }
             $prev.cursor();
           } else {
@@ -108,42 +120,53 @@
       });
       return $();
     },
-    "done": ($li, $container) => {
+    "done": ($li, $container) => { // eslint-disable-line max-statements
       const nodeData = $li.data("node");
       const bodyTxt = $li.find("textarea").val();
+
+      if ($li.hasClass("orgbuffertext")) {
+        const node = {"TEXT": bodyTxt};
+        $li.data("node", node);
+        if (events.save($container)) {
+          return $(bufferTextTmpl(node)).data("node", node).replaceAll($li);
+        }
+        $li.data("node", nodeData);
+        return $();
+      }
       const node = ORG.Parser.parseFile(
         "",
         `${"*".repeat(nodeData ? nodeData.LVL : 1)} ${$li.find("input").val().trim()}${bodyTxt.length ? "\n" + bodyTxt : ""} `,
         $container.data("settings")
       )[0];
-      $container.find(".orgnotice").remove();
-      const $newLi = $(itemTmpl(node)).data("node", node).replaceAll($li);
+      $li.data("node", node);
 
       if (events.save($container)) {
-        return $newLi;
-      } else if (nodeData) {
-        return $(itemTmpl(nodeData)).data("node", nodeData).replaceAll($newLi);
+        $container.find(".orgnotice").remove();
+        return $(itemTmpl(node)).data("node", node).replaceAll($li);
       }
-      const $prev = $newLi.prev();
-      $newLi.remove();
-      return $prev;
+      $li.data("node", nodeData);
+      return $();
     },
     "edit": ($li) => {
-      $li.closest(".orgnotes").find(".inedit .orgicon.close").click();
+      $li.closest(".orgnotes").find(".orgicon.close").click();
       const node = $li.data("node");
-      return $(editTmpl(node)).data("node", node).replaceAll($li);
+      return $(($li.hasClass("orgbuffertext") ? editBufferTextTmpl : editTmpl)(node))
+        .data("node", node)
+        .replaceAll($li);
     },
     "save": ($container) => {
       let file = $container.data("file");
-      const allText = $(".orgbuffertext pre").html().replace(/<br\/?>/g, "\n");
 
       try {
         file.sync.stat = ORG.Store.SyncStatus.MODIFIED;
-        file = ORG.Store.updateFile(file, ORG.Parser.parseFile(
-          file.name,
-          allText,
-          ORG.Settings.getSettingsObj()
-        ).concat($.map($container.find(".orgnotes>li").slice(1), (li) => $(li).data("node"))));
+        file = ORG.Store.updateFile(file, Object.assign(
+          $.map($container.find(".orgnotes>li").slice(1), (li) => $(li).data("node")),
+          ORG.Parser.parseFile(
+            file.name,
+            $(".orgbuffertext").data("node").TEXT,
+            $container.data("settings")
+          )
+        ));
         return file ? $container
           .data("file", file)
           .find(".orgnavbar h1")
@@ -298,12 +321,16 @@
       events[this.classList[1]]($(this).closest("li"), $container).cursor();
       return false;
     }).on("click", ".collapsible", function () {
-      $(this).toggleClass("collapsed");
+      $(this).parent().toggleClass("collapsed");
     }).on("contextmenu", "li:not(.inedit)", (ev) => {
-      events.context($(ev.currentTarget))
-        .cursor()
-        .find("textarea").autoHeight().end()
-        .find("input").focus();
+      const $li = events.context($(ev.currentTarget)).cursor();
+
+      if ($li.is(".orgbuffertext")) {
+        $li.find("textarea").autoHeight().textFocus();
+      } else {
+        $li.find("textarea").autoHeight().end()
+          .find("input[type=text]").textFocus();
+      }
       return false;
     }).on("keydown", "textarea", (ev) => {
       clearTimeout(textareaTimeout);
@@ -379,29 +406,129 @@
         }
       }).addClass("flex"),
       $(document.createElement("div")).orgNavbar({
-        "TODO": {"type": ICONTYPE.TEXT, "fn": ""},
-        "PRI": {"type": ICONTYPE.TEXT, "fn": ""},
-        "TAG": {"type": ICONTYPE.TEXT, "fn": ""},
+        "TODO": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const todoKeywords = ORG.Settings
+                .getTodoKeywords(this.data("settings"))
+                .filter((keyword) => keyword !== "|");
+
+              const updateFn = (todoKeyword) => () => {
+                const node = $li.data("node");
+                node.TODO = todoKeyword;
+                $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                events.save(this);
+              };
+              this.orgNotify({
+                "grid": 1,
+                "items": [{
+                  "name": "None",
+                  "fn": updateFn("")
+                }].concat(todoKeywords.map((keyword) => ({
+                  "name": keyword,
+                  "fn": updateFn(keyword)
+                })))
+              });
+            }
+            return $li;
+          }
+        },
+        "PRI": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const priorityLetters = ORG.Settings
+                .getPriorityLetters(this.data("settings"))
+                .filter((letter) => letter !== "|");
+
+              const updateFn = (letter) => () => {
+                const node = $li.data("node");
+                node.PRI = letter;
+                $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                events.save(this);
+              };
+              this.orgNotify({
+                "grid": 1,
+                "items": [{
+                  "name": "None",
+                  "fn": updateFn("")
+                }].concat(priorityLetters.map((letter) => ({
+                  "name": letter,
+                  "fn": updateFn(letter)
+                })))
+              });
+            }
+            return $li;
+          }
+        },
+        "TAG": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const node = $li.data("node");
+              this.orgNotify({
+                "message": "Set Tag(s):",
+                "prompt": 1,
+                "confirm": (tags) => {
+                  node.TAGS = ":" + tags.split(/:| /).filter(Boolean).join(":") + ":";
+                  $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                  events.save(this);
+                },
+                "value0": node.TAGS
+              });
+            }
+          }
+        },
         "SCH": {"type": ICONTYPE.TEXT, "fn": ""},
         "DL": {"type": ICONTYPE.TEXT, "fn": ""},
-        "PROP": {"type": ICONTYPE.TEXT, "fn": ""},
+        "PROP": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const node = $li.data("node");
+              this.orgNotify({
+                "message": "Set Property:",
+                "prompt": 2,
+                "confirm": (propKey, propVal) => {
+                  if (propKey) {
+                    node.PROPS[propKey] = propVal;
+                    $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                    events.save(this);
+                  }
+                },
+                "placeholder0": "Property Key",
+                "placeholder1": "Property Value"
+              });
+            }
+          }
+        },
         "NOTE": {"type": ICONTYPE.TEXT, "fn": ""}
       }).addClass("gridrow"),
       `<ul class="orgnotes orglist orgview">
-      <li class="orgbuffertext"><pre>${markup(nodes.TEXT) || "\n"}</pre></li>
+      ${bufferTextTmpl(nodes)}
       ${nodes.map((node) => itemTmpl(node, 0, 1)).join("")}
       </ul>`,
       nodes.length ? "" : "<div class='orgnotice'><br/>Empty file. Add notes by clicking on + icon</div></div>",
       ORG.Settings.getStyles()
     ));
 
-
-    $orgNotes.find(".orglist>li").slice(1).each(function (idx) {
-      const $this = $(this);
-      const node = nodes[idx];
-      $this.data("node", node);
-      if (node.LVL > 1) $this.hide();
-    });
+    $orgNotes.find(".orglist>li")
+      .first().data("node", {"TEXT": nodes.TEXT}).end()
+      .slice(1).each(function (idx) {
+        const $this = $(this);
+        const node = nodes[idx];
+        $this.data("node", node);
+        if (node.LVL > 1) $this.hide();
+      });
     if (nodeId) {
       updateHeadingBody($orgNotes.find(`.orglist > li:nth-child(${+nodeId + 2})`))
         .cursor()

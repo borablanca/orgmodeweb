@@ -21,7 +21,7 @@
       .split(" ")
       .filter(Boolean)
       .join("|")
-  })?\\s*(?:\\[#([a-zA-Z])\\])?\\s*(.*?)[ \\t]*(:[^\\s]+:)?\\s*(?:\\r\\n?)?$`);
+    })?\\s*(?:\\[#([a-zA-Z])\\])?\\s*(.*?)[ \\t]*(:[^\\s]+:)?\\s*(?:\\r\\n?)?$`);
 
   const createTimestamp = (match) => ({
     "ml": new Date(match[1], match[2] - 1, match[3]).getTime(), // miliseconds
@@ -88,10 +88,10 @@
         headings.TEXT = rawHeadings[headingIdx++];
       }
       for (
-        let nheadings = rawHeadings.length, heading, headingLines, matches;
+        let nheadings = rawHeadings.length, newLineRe = /\n/, heading, headingLines, matches;
         headingIdx < nheadings;
       ) {
-        headingLines = rawHeadings[headingIdx++].split(/\n/);
+        headingLines = rawHeadings[headingIdx++].split(newLineRe);
         matches = headingLines[0].match(orgHeadingRE);
         heading = {
           "LVL": matches[1].length,
@@ -153,16 +153,16 @@
       ) {
         line = text[lineIdx];
         if (DrawerStartRE.test(line)) {
-          bodyHtml += `<div class="collapsible collapsed"><div>:${line.match(DrawerStartRE)[1]}:</div>`;
+          bodyHtml += `<div class="collapsed"><div class="collapsible">:${line.match(DrawerStartRE)[1]}:</div>`;
           while (
             typeof (line = text[++lineIdx]) === "string" &&
             !DrawerEndRE.test(line)
           ) {
-            bodyHtml += `<div>${markup(line)}</div>`;
+            bodyHtml += `<div>${markup(line + "\n")}</div>`;
           }
-          bodyHtml += "<div>:END:</div></div>";
+          bodyHtml += "<div class='orgdim'>:END:</div></div>";
         } else {
-          bodyHtml += `<div>${markup(line)}</div>`;
+          bodyHtml += `<div>${markup(line + "\n")}</div>`;
         }
       }
       return bodyHtml;

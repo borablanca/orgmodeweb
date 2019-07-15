@@ -22,7 +22,7 @@
   };
 
   const agendaItemTmpl = (node, settings) => singleLine`
-  <li data-url="#notes#${node.FILEID}#${node.ID}">
+  <li class="lvl1" data-url="#notes#${node.FILEID}#${node.ID}">
     <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
     <span>
     ${timeTmpl(node, settings)}
@@ -34,10 +34,10 @@
   </li>`;
 
   const tagItemTmpl = (node) => singleLine`
-  <li data-url="#notes#${node.FILEID}#${node.ID}">
+  <li class="lvl1" data-url="#notes#${node.FILEID}#${node.ID}">
     <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
     <span>
-    ${node.TODO ? `<span class="todo ${node.TODO}">${node.TODO} </span>` : ""}
+    ${node.TODO ? `<span class="orgtodo ${node.TODO}">${node.TODO} </span>` : ""}
     ${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}
     <span class="title">${markup(node.TITLE)}</span>
     </span>

@@ -21,19 +21,22 @@
    * };
    */
   $.fn.orgNotify = function (plan) {
-    this.find(".orgnotify").off().remove(); // remove any previous notify
     const {icon, textIcon} = ORG.Icons;
+    this.find(".orgnotify").off().remove(); // remove any previous notify
     const $notify = $(document.createElement("div")).addClass("orgnotify").append(
-      `<div>
+      `<div class="">
 ${plan.message ? `<div class="orgmessage">${plan.message}</div>` : ""}
 ${plan.items ? `<div${plan.grid ? " class='grid'" : ""}>
 ${plan.items.map((item) => textIcon(item.name)).join("")}
 </div>` : ""}
-${plan.prompt ? `<input type="text" spellcheck="false" value="${plan.default || ""}"/>` : ""}
+${plan.prompt ? `${[...Array(plan.prompt).keys()].map((idx) => `
+<input type="text" spellcheck="false" value="${plan["value" + idx] || ""}" placeholder="${plan["placeholder" + idx] || ""}"/>`
+  ).join("")}` : ""}
 ${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
-</div>
-</div>`
-    ).hide();
+</div >
+</div > `
+    );
+
     const removeFn = () => $notify.off()
       .fadeOut(150, () => $notify.remove() && plan.cb && plan.cb());
 
@@ -49,16 +52,22 @@ ${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
       .on("click", "*:not(input)", function (ev) {
         if (ev.target !== this) return true;
         if ($(this).hasClass("done")) {
-          plan.confirm(plan.prompt ? $notify.find("input").val() : "");
+          plan.confirm.apply(this, plan.prompt ? $notify.find("input").map((idx, inpt) => inpt.value).toArray() : null);
         } else if (plan.cancel) {
           plan.cancel();
         }
         if (!plan.sticky) removeFn();
         return false;
       })
+      .hide()
       .appendTo(this)
-      .fadeIn(200)
-      .find(plan.prompt ? "input" : ".orgicon.done a").focus();
+      .fadeIn(150);
+
+    if (plan.prompt) {
+      $notify.find("input[type=text]").eq(0).textFocus();
+    } else {
+      $notify.find(".orgicon.done a").eq(0).focus();
+    }
 
     if (!(plan.sticky || plan.confirm || plan.items)) {
       setTimeout(removeFn, plan.duration || 2000);

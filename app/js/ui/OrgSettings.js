@@ -5,7 +5,7 @@
    <pre class="body lvl2">${setting.value}</pre>
   </li>`;
 
-  const editTmpl = (setting = {"name": "", "value": ""}) => `<li class="border cf lvl1 inedit">
+  const editTmpl = (setting = { "name": "", "value": "" }) => `<li class="border cf lvl1 inedit">
  <input type="text" class="lvl1" spellcheck="false" placeholder="setting name" value="${setting.name}"/>
  <textarea class="lvl2" spellcheck="false" placeholder="value">${setting.value}</textarea>
  ${ORG.Icons.icon(setting.name ? setting.default ? "reset" : "delete" : "")}${ORG.Icons.icon("close")}${ORG.Icons.icon("done")}
@@ -21,8 +21,7 @@
           return $(itemTmpl(setting)).data("item", setting).replaceAll($li);
         }
         const $prev = $li.prev();
-        if ($prev[0]) $prev.cursor();
-        else $li.next().cursor();
+        if (!$prev[0]) $prev = $li.next();
         $li.remove();
         return $prev;
       },
@@ -41,7 +40,7 @@
                   $li.remove();
                 }
               } catch (errorText) {
-                this.closest(".orgpage").orgNotify({"message": errorText});
+                this.closest(".orgpage").orgNotify({ "message": errorText });
               }
             }
           });
@@ -60,16 +59,12 @@
             return $(itemTmpl(newSetting)).data("item", newSetting).replaceAll($li).cursor();
           }
         } catch (errorMessage) {
-          $li.closest(".orgpage").orgNotify({"message": errorMessage});
+          $li.closest(".orgpage").orgNotify({ "message": errorMessage });
         }
         return $();
       },
       "edit": ($li) => {
-        $li.closest(".orgpage").find(".inedit").each((idx, item) => {
-          const $item = $(item);
-          const itemData = $item.data("item");
-          $(itemTmpl(itemData)).data("item", itemData).replaceAll($item);
-        });
+        $li.closest(".orgpage").find(".inedit .orgicon.close").click();
         const item = $li.data("item");
         return $(editTmpl(item)).data("item", item).replaceAll($li);
       },
@@ -121,10 +116,12 @@
       return false;
     }).on("click", ".orglist .orgicon", function () {
       const $li = $(this).closest("li");
-      events[this.classList[1]]($li, ORG.Settings.getSettings()[$li.data("setting")]).cursor();
+      events[this.classList[1]]($li).cursor();
       return false;
     }).on("contextmenu", "li:not(.inedit)", function () {
-      events.edit($(this)).cursor().find("textarea").autoHeight();
+      events.edit($(this)).cursor()
+        .find("textarea").autoHeight().end()
+        .find("input").textFocus();
       return false;
     }).on("input", "textarea", (ev) => {
       clearTimeout(textareaTimeout);
@@ -133,12 +130,12 @@
   };
 
   $.fn.orgSettings = function (settings) {
-    const {ICONTYPE} = ORG.Icons;
+    const { ICONTYPE } = ORG.Icons;
     const $orgSettings = init(this.removeData().off().empty().append(
       $(document.createElement("div")).orgNavbar({
-        "org": {"type": ICONTYPE.ICON, "fn": "#"},
-        "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
-        "title": {"type": "Settings"},
+        "org": { "type": ICONTYPE.ICON, "fn": "#" },
+        "back": { "type": ICONTYPE.ICON, "fn": () => history.back() },
+        "title": { "type": "Settings" },
         "add": {
           "type": ICONTYPE.ICON,
           "fn": () => {

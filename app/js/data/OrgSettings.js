@@ -5,7 +5,7 @@
     const obj = {};
     if (!$.isArray(arr)) return obj;
     for (let itemCounter = 0, nitem = arr.length; itemCounter < nitem;) {
-      obj[arr[itemCounter++]] = quoteSplit(arr[itemCounter++]);
+      obj[arr[itemCounter++]] = quoteSplit(arr[itemCounter++])[0];
     }
     return obj;
   };
@@ -71,8 +71,8 @@
         ).join("")}}`
       ).join("")}</style>`;
     },
-    "getPriorityLetters": (headings = []) => (headings.PRIORITY || getSettingsObj())["priority-letters"].split(/\s+/),
-    "getTodoKeywords": (headings = []) => (headings.TODO || getSettingsObj()["todo-keywords"]).replace(/\([^)]*\)/g, "").split(/\s+/),
+    "getPriorityLetters": (settings = getSettingsObj()) => settings["priority-letters"].split(/\s+/),
+    "getTodoKeywords": (settings = getSettingsObj()) => settings["todo-keywords"].replace(/\([^)]*\)/g, "").split(/\s+/),
     "deleteSetting": (setting) => {
       const settings = getSettingsObj(1);
       const settingName = setting.name;

@@ -1,6 +1,6 @@
 (() => {
   const {icon, ICONTYPE} = ORG.Icons;
-  const {SyncStatus, SyncType, updateFile} = ORG.Store;
+  const {SyncStatus, SyncType} = ORG.Store;
   const {syncFile} = ORG.Sync;
 
   const itemTmpl = (file) => `<li class="border flex sync${file.sync.stat}">
@@ -25,31 +25,24 @@
         const file = $li.data("file");
 
         if (file) {
-          $(itemTmpl(file)).data("file", file).replaceAll($li).cursor();
-        } else {
-          if (!$li.siblings("#cursor")[0]) {
-            const $prev = $li.prev();
-            if ($prev[0]) $prev.cursor();
-            else $li.next().cursor();
-          }
-          $li.remove();
+          return $(itemTmpl(file)).data("file", file).replaceAll($li);
         }
-        return false;
+        let $prev = $li.prev();
+        if (!$prev[0]) $prev = $li.next();
+        $li.remove();
+        return $prev;
       },
       "edit": ($li) => {
-        const $orgFiles = $li.closest(".orgfiles");
-        $orgFiles.find(".inedit .orgicon.close").click();
+        $li.siblings(".inedit").find(".orgicon.close").click();
         const file = $li.data("file");
-        $(editTmpl(file))
-          .addClass("inedit")
+        return $(editTmpl(file))
           .data("file", file)
-          .replaceAll($li).cursor()
-          .find("input[type=text]").focus();
-        return false;
+          .replaceAll($li);
       },
       "context": ($li) => {
         if ($li.find(".orgicon.sync")[0]) {
           const $orgpage = $li.closest(".orgpage");
+          $orgpage.find(".inedit .orgicon.close").click();
 
           const updateFn = (stat, dml) => {
             const file = $li
@@ -78,8 +71,9 @@
               },
             ]
           });
-        } else events.edit($li);
-        return false;
+          return $li;
+        }
+        return events.edit($li);
       },
       "delete": ($li) => {
         const $orgpage = $li.closest(".orgpage");
@@ -91,8 +85,12 @@
               if (ORG.Store.deleteFile(file.id)) {
                 if ($li.is("#cursor")) {
                   const $prev = $li.prev();
-                  if ($prev[0]) $prev.cursor();
-                  else $li.next().cursor();
+                  ($prev[0] ? $prev : $li.next()).cursor();
+                }
+                if (!$li.siblings().length) {
+                  $li.parent().append(
+                    "<div class='orgnotice'><br/>There aren't any org files<br/><br/>Create new file by clicking on + icon</div>"
+                  );
                 }
                 $li.remove();
               }
@@ -101,24 +99,25 @@
             }
           }
         });
+        return $();
       },
       "done": ($li) => {
         let file = $li.data("file");
-        const name = $li.find("input").val();
+        const name = $li.find("input[type=text]").val();
 
         try {
           if (file) { // update
             file.name = name;
-            updateFile(file);
+            file = ORG.Store.updateFile(file);
           } else { // new file
             file = ORG.Store.createFile(name);
           }
+          $li.closest(".orgpage").find(".orgnotice").remove();
+          return $(itemTmpl(file)).data("file", file).replaceAll($li);
         } catch (errorMessage) {
-          return $li.closest(".orgpage").orgNotify({"message": errorMessage});
+          $li.closest(".orgpage").orgNotify({"message": errorMessage});
         }
-        $(itemTmpl(file)).data("file", file).replaceAll($li).cursor();
-
-        return false;
+        return $();
       },
       "sync": ($li) => {
         const clss = $li.attr("class");
@@ -131,7 +130,7 @@
           (status) => {
             try {
               file.sync.stat = status;
-              if (updateFile(file)) {
+              if (ORG.Store.updateFile(file)) {
                 $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status);
               }
             } catch (errorMessage) {
@@ -141,6 +140,7 @@
             }
           },
           (message) => $li.attr("class", clss).closest(".orgpage").orgNotify({"message": message}));
+        return $();
       }
     };
 
@@ -180,9 +180,14 @@
      * }
      */
     return $container.on("click", ".orgfiles .orgicon", function () {
-      events[this.classList[1]]($(this).closest("li"));
+      events[this.classList[1]]($(this).closest("li")).cursor();
       return false;
-    }).on("contextmenu", "li:not(.inedit)", (ev) => events.context($(ev.target).closest("li")));
+    }).on("contextmenu", "li:not(.inedit)", (ev) => {
+      events.context($(ev.target).closest("li"))
+        .cursor()
+        .find("input[type=text]").textFocus();
+      return false;
+    });
   };
 
   $.fn.orgFiles = function (fileList = []) {

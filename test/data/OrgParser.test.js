@@ -563,9 +563,9 @@ log1
     ]));
     assert.equal($html.length, 3);
     assert.notOk($html.eq(0).hasClass("collapsible"));
-    assert.ok($html.eq(1).hasClass("collapsible"));
+    assert.ok($html.eq(1).children().eq(0).hasClass("collapsible"));
     assert.equal($html.eq(1).find("div").length, 3);
-    assert.ok($html.eq(2).hasClass("collapsible"));
+    assert.ok($html.eq(2).children().eq(0).hasClass("collapsible"));
   });
   QUnit.test("parseDrawers no :END: drawer", (assert) => {
     const $html = $(parseDrawers([
@@ -573,7 +573,7 @@ log1
       "inside drawer"
     ]));
     assert.equal($html.length, 1);
-    assert.ok($html.eq(0).hasClass("collapsible"));
+    assert.ok($html.eq(0).children().eq(0).hasClass("collapsible"));
     assert.equal($html.eq(0).find("div").length, 3);
   });
 });

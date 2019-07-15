@@ -641,12 +641,16 @@ SCHEDULED: <2018-0-15>`
     const slots = search([{
       "type": "agenda",
       "agenda-span": 2,
-    }], {"getFileList": () => ["f"], "getFileContents": () => "\n* repeating\nSCHEDULED: <2018-07-01 +2w>"}, defaults);
+    }], {
+      "getFileList": () => ["f"],
+      "getFileContents": () => "\n* repeating\nSCHEDULED: <2018-07-01 +2w>"
+    }, defaults);
+    const offset = (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 14;
     assert.equal(slots[0].length, 1);
     assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
-    assert.equal(slots[0][0].OFFSET, (new Date().setHours(0, 0, 0, 0) - new Date("2018-07-01").setHours(0, 0, 0, 0)) / DAY % 14);
+    assert.equal(slots[0][0].OFFSET, offset);
 
-    assert.equal(slots[1].length, 0);
+    assert.equal(slots[1].length, offset === 13 ? 1 : 0);
   });
   QUnit.test("repeater 3", (assert) => {
     const slots = search([{

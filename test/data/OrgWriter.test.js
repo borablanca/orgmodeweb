@@ -17,9 +17,9 @@ QUnit.module("OrgWriter Tests", () => {
     assert.equal(writeFile([]), "");
   });
   QUnit.test("should return empty string if nodes has empty objects", (assert) => {
-    assert.equal(writeFile([{"TEXT": []}]), "");
-    assert.equal(writeFile([{"TEXT": []}, {"TEXT": []}]), "");
-    assert.equal(writeFile([{"TEXT": []}, {"TEXT": []}, {"TEXT": []}]), "");
+    assert.equal(writeFile([{"TEXT": [], "PROPS": {}}]), "");
+    assert.equal(writeFile([{"TEXT": [], "PROPS": {}}, {"TEXT": [], "PROPS": {}}]), "");
+    assert.equal(writeFile([{"TEXT": [], "PROPS": {}}, {"TEXT": [], "PROPS": {}}, {"TEXT": [], "PROPS": {}}]), "");
   });
   QUnit.test("should return as expected only first node", (assert) => {
     assert.equal(writeFile(Object.assign([], {"TEXT": ""})), "");
@@ -34,37 +34,43 @@ QUnit.module("OrgWriter Tests", () => {
       "LVL": "1",
       "TODO": "",
       "TITLE": "test",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* test");
     assert.equal(writeFile([{
       "LVL": "1",
       "TODO": "SMTH",
       "TITLE": "test",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH test");
     assert.equal(writeFile([{
       "LVL": "1",
       "TITLE": "test",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* test");
     assert.equal(writeFile([{
       "LVL": "1",
       "TODO": "SMTH",
       "PRI": "A",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH [#A]");
     assert.equal(writeFile([{
       "LVL": "2",
       "TODO": "SMTH",
       "PRI": "A",
       "TITLE": "test",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "** SMTH [#A] test");
     assert.equal(writeFile(Object.assign([{
       "LVL": "1",
       "TODO": "",
       "TITLE": "test",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }], {"TEXT": "settings"})), "settings\n* test");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -72,28 +78,32 @@ QUnit.module("OrgWriter Tests", () => {
       "PRI": "A",
       "TITLE": "test",
       "TAGS": ":tag1:",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH [#A] test\t\t:tag1:");
     assert.equal(writeFile([{
       "LVL": "1",
       "PRI": "A",
       "TITLE": "test",
       "TAGS": ":tag1:",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* [#A] test\t\t:tag1:");
     assert.equal(writeFile([{
       "LVL": "1",
       "TODO": "SMTH",
       "TITLE": "test",
       "TAGS": ":tag1:",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH test\t\t:tag1:");
     assert.equal(writeFile([{
       "LVL": "1",
       "TODO": "SMTH",
       "PRI": "A",
       "TAGS": ":tag1:",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH [#A]\t\t:tag1:");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -101,7 +111,8 @@ QUnit.module("OrgWriter Tests", () => {
       "PRI": "A",
       "TITLE": "test",
       "TAGS": ":tag1:",
-      "TEXT": []
+      "TEXT": [],
+      "PROPS": {}
     }]), "* SMTH [#A] test\t\t:tag1:");
   });
 
@@ -116,6 +127,7 @@ QUnit.module("OrgWriter Tests", () => {
       "SCHEDULED": {
         "ml": 1525294800000,
       },
+      "PROPS": {}
     }]), "* SMTH [#A] test\t\t:tag1:\nSCHEDULED: <2018-05-03 Thu>");
   });
 
@@ -128,6 +140,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "hs": "12:00",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu 12:00>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -137,6 +150,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "he": "12:00",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -147,6 +161,7 @@ QUnit.module("OrgWriter Tests", () => {
         "hs": "12:00",
         "he": "14:00",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu 12:00-14:00>");
   });
 
@@ -160,6 +175,7 @@ QUnit.module("OrgWriter Tests", () => {
         "r": "+",
         "rmin": "1d",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu +1d>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -169,6 +185,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "rmin": "1d",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -180,6 +197,7 @@ QUnit.module("OrgWriter Tests", () => {
         "rmin": "1d",
         "rmax": "2d",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu +1d/2d>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -193,6 +211,7 @@ QUnit.module("OrgWriter Tests", () => {
         "rmin": "1d",
         "rmax": "2d",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu 12:00-14:00 +1d/2d>");
   });
 
@@ -205,6 +224,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "w": "1w",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu -1w>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -216,6 +236,7 @@ QUnit.module("OrgWriter Tests", () => {
         "he": "14:00",
         "w": "1w",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu 12:00-14:00 -1w>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -228,6 +249,7 @@ QUnit.module("OrgWriter Tests", () => {
         "rmax": "2d",
         "w": "1w",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu +1d/2d -1w>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -239,6 +261,7 @@ QUnit.module("OrgWriter Tests", () => {
         "rmin": "1d",
         "w": "1w",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu +1d -1w>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -253,6 +276,7 @@ QUnit.module("OrgWriter Tests", () => {
         "rmax": "2d",
         "w": "1w",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu 12:00-14:00 +1d/2d -1w>");
   });
 
@@ -265,6 +289,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "n": "",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -274,6 +299,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "n": "test",
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -283,6 +309,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "n": null,
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -292,6 +319,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1525294800000,
         "n": {"ml": 1525381200000},
       },
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu>-<2018-05-04 Fri>");
   });
 
@@ -301,6 +329,7 @@ QUnit.module("OrgWriter Tests", () => {
       "TITLE": "test",
       "DEADLINE": {"ml": 1525294800000},
       "TEXT": [],
+      "PROPS": {}
     }]), "* test\nDEADLINE: <2018-05-03 Thu>");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -308,28 +337,11 @@ QUnit.module("OrgWriter Tests", () => {
       "SCHEDULED": {"ml": 1525294800000},
       "DEADLINE": {"ml": 1525294800000},
       "TEXT": [],
+      "PROPS": {}
     }]), "* test\nSCHEDULED: <2018-05-03 Thu> DEADLINE: <2018-05-03 Thu>");
   });
 
   QUnit.test("should return as expected with properties", (assert) => {
-    assert.equal(writeFile([{
-      "LVL": "1",
-      "TITLE": "test",
-      "TEXT": [],
-      "PROPS": ""
-    }]), "* test");
-    assert.equal(writeFile([{
-      "LVL": "1",
-      "TITLE": "test",
-      "TEXT": [],
-      "PROPS": null
-    }]), "* test");
-    assert.equal(writeFile([{
-      "LVL": "1",
-      "TITLE": "test",
-      "TEXT": [],
-      "PROPS": []
-    }]), "* test");
     assert.equal(writeFile([{
       "LVL": "1",
       "TITLE": "test",
@@ -375,12 +387,14 @@ QUnit.module("OrgWriter Tests", () => {
     assert.equal(writeFile([{
       "LVL": "1",
       "TITLE": "test",
-      "TEXT": ["log1"]
+      "TEXT": ["log1"],
+      "PROPS": {}
     }]), "* test\nlog1");
     assert.equal(writeFile([{
       "LVL": "1",
       "TITLE": "test",
-      "TEXT": ["log1", "log2"]
+      "TEXT": ["log1", "log2"],
+      "PROPS": {}
     }]), "* test\nlog1\nlog2");
     assert.equal(writeFile([{
       "LVL": "1",
@@ -403,11 +417,11 @@ QUnit.module("OrgWriter Tests", () => {
 
   QUnit.test("should return as expected with multiple nodes", (assert) => {
     assert.equal(writeFile(Object.assign([
-      {"LVL": "1", "TITLE": "test1", "TEXT": []},
-      {"LVL": "2", "TITLE": "test2", "TEXT": []}], {"TEXT": "setting"})),
+      {"LVL": "1", "TITLE": "test1", "TEXT": [], "PROPS": {}},
+      {"LVL": "2", "TITLE": "test2", "TEXT": [], "PROPS": {}}], {"TEXT": "setting"})),
     "setting\n* test1\n** test2");
     assert.equal(writeFile(Object.assign([
-      {"LVL": "1", "TITLE": "test1", "DEADLINE": {"ml": 1525294800000}, "TEXT": [""]},
+      {"LVL": "1", "TITLE": "test1", "DEADLINE": {"ml": 1525294800000}, "TEXT": [""], "PROPS": {}},
       {"LVL": "2", "TITLE": "test2", "PROPS": {"prop1": "val1", "prop2": "val2"}, "TEXT": ["text1"]}], {"TEXT": "setting"})),
     "setting\n* test1\nDEADLINE: <2018-05-03 Thu>\n\n** test2\n:PROPERTIES:\n:prop1: val1\n:prop2: val2\n:END:\ntext1");
   });
@@ -421,6 +435,7 @@ QUnit.module("OrgWriter Tests", () => {
         "ml": 1532693134504,
         "hs": "15:05",
       },
+      "PROPS": {}
     }]), "* test\nCLOSED: [2018-07-27 Fri 15:05]");
   });
 

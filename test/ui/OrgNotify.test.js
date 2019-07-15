@@ -18,10 +18,10 @@ QUnit.test("notification with all parameters", (assert) => {
   let flag = false;
   const $page = $("#qunit-fixture").orgNotify({
     "message": "message",
-    "prompt": true,
-    "confirm": () => flag = true,
-    "default": "val",
-  }, ORG.Icons);
+    "prompt": 1,
+    "value0": "val",
+    "confirm": () => flag = true
+  });
   const $notification = $page.find(".orgnotify");
   const $input = $notification.find("input[type=text]");
   assert.equal($input.length, 1);

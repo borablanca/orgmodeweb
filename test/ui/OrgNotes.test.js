@@ -72,6 +72,6 @@ QUnit.module("OrgNotes Tests", (hooks) => {
     const file = createFile("file1", "\ntext\nmoretext\n\n* node");
     $("#qunit-fixture").orgNotes(file);
     const $pre = $(".orgnotes .orgbuffertext pre", "#qunit-fixture");
-    assert.equal($pre.html(), "text<br>moretext<br>");
+    assert.equal($pre.html(), "text<br>moretext<br><br>");
   });
 });

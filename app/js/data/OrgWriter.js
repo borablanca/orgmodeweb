@@ -1,8 +1,5 @@
 (() => {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const writeTimestamp = (orgTimestamp, inactive) => {
+  const writeTimestamp = (orgTimestamp, days, inactive) => {
     const date = new Date(orgTimestamp.ml);
     const year = date.getFullYear();
     if (isNaN(year)) return null;
@@ -22,17 +19,16 @@
     }
     if (orgTimestamp.w) tsStr += " -" + orgTimestamp.w;
     if (orgTimestamp.n) {
-      const nextStamp = writeTimestamp(orgTimestamp.n, inactive);
+      const nextStamp = writeTimestamp(orgTimestamp.n, days, inactive);
       if (nextStamp) return tsStr + (inactive ? "]--" : ">-") + nextStamp;
     }
     return tsStr + (inactive ? "]" : ">");
   };
 
   ORG.Writer = {
-    days,
-    months,
     writeTimestamp,
     "writeFile": (nodes) => { // eslint-disable-line
+      const days = ORG.Calendar.getDayNames();
       if (!Array.isArray(nodes)) return "";
       let fileText = nodes.TEXT && nodes.TEXT.length ? nodes.TEXT + "\n" : "";
 
@@ -44,14 +40,14 @@
         if (node.PRI) fileText += " [#" + node.PRI + "]";
         if (node.TITLE) fileText += " " + node.TITLE;
         if (node.TAGS) fileText += "\t\t" + node.TAGS;
-        if (node.CLOSED) fileText += "\nCLOSED: " + writeTimestamp(node.CLOSED, true);
+        if (node.CLOSED) fileText += "\nCLOSED: " + writeTimestamp(node.CLOSED, days, 1);
         if (node.SCHEDULED && node.SCHEDULED.ml) {
-          fileText += (node.CLOSED ? " " : "\n") + "SCHEDULED: " + writeTimestamp(node.SCHEDULED);
+          fileText += (node.CLOSED ? " " : "\n") + "SCHEDULED: " + writeTimestamp(node.SCHEDULED, days);
         }
         if (node.DEADLINE && node.DEADLINE.ml) {
-          fileText += (node.CLOSED || node.SCHEDULED ? " " : "\n") + "DEADLINE: " + writeTimestamp(node.DEADLINE);
+          fileText += (node.CLOSED || node.SCHEDULED ? " " : "\n") + "DEADLINE: " + writeTimestamp(node.DEADLINE, days);
         }
-        props = node.PROPS || {};
+        props = node.PROPS;
         propKeys = Object.keys(props);
 
         if (propKeys.length) {
