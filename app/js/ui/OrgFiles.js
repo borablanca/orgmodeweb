@@ -54,13 +54,19 @@
             syncFile(
               file,
               (status) => $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status),
-              () => $li.removeClass("sync" + SyncStatus.INSYNC) &&
-                $orgpage.orgNotify("Connection problem, couldn't sync file.")
+              (message) => $li.removeClass("sync" + SyncStatus.INSYNC) &&
+                $orgpage.orgNotify({"message": message})
             );
           };
           $orgpage.orgNotify({
             "items": [
-              {"name": "Edit", "fn": () => events.edit($li)},
+              {
+                "name": "Edit",
+                "fn": () => events
+                  .edit($li)
+                  .find("input[type=text]")
+                  .textFocus()
+              },
               {
                 "name": "Sync Force Local File",
                 "fn": () => updateFn(SyncStatus.MODIFIED, Infinity)
@@ -83,10 +89,8 @@
           "confirm": () => {
             try {
               if (ORG.Store.deleteFile(file.id)) {
-                if ($li.is("#cursor")) {
-                  const $prev = $li.prev();
-                  ($prev[0] ? $prev : $li.next()).cursor();
-                }
+                const $prev = $li.prev();
+                ($prev[0] ? $prev : $li.next()).cursor();
                 if (!$li.siblings().length) {
                   $li.parent().append(
                     "<div class='orgnotice'><br/>There aren't any org files<br/><br/>Create new file by clicking on + icon</div>"
@@ -134,9 +138,7 @@
                 $li.removeClass("sync" + SyncStatus.INSYNC).addClass("sync" + status);
               }
             } catch (errorMessage) {
-              $li.closest(".orgpage").orgNotify({
-                "message": errorMessage
-              });
+              $li.closest(".orgpage").orgNotify({"message": errorMessage});
             }
           },
           (message) => $li.attr("class", clss).closest(".orgpage").orgNotify({"message": message}));
@@ -202,7 +204,7 @@
         "add": {
           "type": ICONTYPE.ICON,
           "fn": () => this.orgNotify({
-            "grid": 1,
+            "grid": "grid",
             "items": [{
               "name": "Local File",
               "fn": () => {

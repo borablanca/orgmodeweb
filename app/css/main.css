@@ -16,7 +16,7 @@
 }
 * {box-sizing: border-box; margin: 0; padding: 0; outline: none;}
 html, input, textarea {font-family: Consolas, monaco, monospace;}
-button{
+button, input[type="button"]{
   background-color: var(--bgColor);
   border: none;
   color: var(--textColor);
@@ -48,8 +48,8 @@ input[type="number"],input[type="text"],textarea {
   line-height: 40px;
   padding: 4px 8px;
   text-align: center;
+  user-select: none;
 }
-.orgicon:hover {background-color: var(--buttonHoverColor);}
 .orgnotice {
   display: block;
   font-style: italic;
@@ -90,10 +90,54 @@ input[type="number"],input[type="text"],textarea {
   margin: 2px 0;
   padding: 0 8px;
 }
-.orgnotify .orgicon {display: block; margin-bottom: 2px;}
 .orgview .orgicon {float: right; margin-bottom: -2px;}
+.orgtime .orgicon, .orgrepeat .orgicon, .orgwarn .orgicon{background-color: var(--bgColor);}
+.orgnotify .orgicon,
+.orgrepeat div .orgicon,
+.orgwarn div .orgicon {display: block; margin-bottom: 2px;}
+.orgtime, .orgrepeat, .orgwarn {align-items: center; display: flex; padding-right: 2px;}
+.orgtime input {
+  appearance: none;
+  background: var(--buttonColor);
+  flex: 1;
+  height: 25px;
+}
+.orgtime input::-webkit-slider-thumb{
+  appearance: none;
+  background: var(--buttonActiveColor);
+  height: 40px;
+  width: 25px;
+}
+.orgtime input::-moz-range-thumb{
+  background: var(--buttonActiveColor);
+  height: 40px;
+  width: 25px;
+}
+.orgrepeat{margin-bottom: 2px;}
+.orgrepeat > div, .orgwarn > div{
+  flex: 1;
+}
+.orgrepeat a.orgicon, .orgwarn a.orgicon {
+  border: 1px solid var(--dimColor);
+}
+.orgrepeat a.orgicon:nth-child(2),
+.orgrepeat a.orgicon:nth-child(3){
+  line-height: 1;
+}
+.orgrepeat div div,
+.orgwarn div div {display: grid; grid-auto-columns: 1fr; height: 50px; }
+.orgwarn div div .orgicon,
+.orgrepeat div div .orgicon {height: 23px; line-height: .8;}
 .orgnotify .orgicon:last-child {margin-bottom: 0;}
-.orgnotify .grid .orgicon {margin: 0; width: 100%;}
+.orgnotify .grid .orgicon,
+.orgcalendar .grid .orgicon {margin: 0; width: 100%;}
+.orgcalendar button, .orgcalendar input[type="button"], .orgcalendar b {height: 40px;}
+.orgcalendar button {background-color: var(--buttonColor);}
+.orgcalendar input[type="button"]{border: 1px solid var(--dimColor);}
+.orgcalendar .selected{background-color: var(--buttonActiveColor);}
+.orgmonth .orgicon:nth-child(3){grid-column-start: 3; grid-column-end: 6;}
+.orgdate {color: var(--firstLevelColor);}
+.orgday {color: var(--secondLevelColor);}
 .orgnavbar {background-color: var(--bgColor); width: 100%; flex: 0 0 48px;}
 .orgnavbar + .orgnavbar {flex: 0 0 40px;}
 .orgnavbar + .orgnavbar .orgicon {height: 40px; line-height: 32px;}
@@ -128,8 +172,6 @@ input[type="number"],input[type="text"],textarea {
 }
 .orgnotes > li:first-child{min-height: 24px; padding-left: 8px;}
 .orgnotes > li:first-child:before{content: ""}
-.orglist li:not(.inedit):hover,
-.orgsearch li:hover button {background: var(--nodeHoverColor);}
 .orgfiles input {height: 48px; padding: 0 5px;}
 .orgfiles span {padding-left: 5px;}
 .orglist .orgicon:first-child {background: none; height: 36px;}
@@ -151,7 +193,6 @@ input[type="number"],input[type="text"],textarea {
 .sync3 span:after{content: "...";}
 
 /* Utils */
-b{font-weight: bold;}
 .border {
   border-bottom: 1px solid var(--buttonColor);
   border-top: 1px solid var(--buttonColor);
@@ -173,6 +214,9 @@ b{font-weight: bold;}
   grid-gap: 2px;
   grid-template-columns: repeat(auto-fit, minmax(126px,1fr));
 }
+.grid3{grid-template-columns: 1fr 1fr 1fr;}
+.grid7{grid-template-columns: repeat(7, 1fr); grid-gap: 2px;}
+.grid8{grid-template-columns: repeat(8, 1fr); grid-gap: 2px;}
 .gridrow {display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; grid-gap: 2px;}
 .lvl1 {color: var(--firstLevelColor);}
 .lvl2 {color: var(--secondLevelColor) !important;}
@@ -184,7 +228,29 @@ b{font-weight: bold;}
 .sch,.dl,.cls,.collapsible, .orgdim {color: var(--dimColor);}
 .ts {color: var(--timestampColor);}
 
+@media (max-width: 321px){ /* for tiny screens */
+  .orgrepeat a.orgicon {font-size: 50%;}
+}
 /* stylelint-disable-next-line unit-whitelist */
-/* @media (min-width: 1025px){
-  .orgicon {height: 30px;}
-} */
+@media (min-width: 1025px){
+  .orgicon:hover {background-color: var(--buttonHoverColor);}
+  .orgcalendar .orgicon.clock:hover,
+  .orgcalendar .orgicon.repeat:hover,
+  .orgcalendar .orgicon.warn:hover,
+  .orgcalendar .orgicon.delay:hover {background-color: var(--bgColor);}
+  .orgtime .orgicon:hover,
+  .orgrepeat .orgicon:hover,
+  .orgwarn .orgicon:hover{
+    background-color: var(--buttonHoverColor);
+    cursor: pointer;
+  }
+  .orgrepeat a.orgicon.selected:hover, .orgwarn a.orgicon.selected:hover{
+    background-color: var(--buttonActiveColor);
+  }
+  .orglist li:not(.inedit):hover,
+  .orgsearch li:hover button {background: var(--nodeHoverColor);}
+  .orgnotify > div:first-child,
+  .orgcalendar > div:first-child {width: 50%;}
+  input[type="button"]:hover {background-color: var(--buttonHoverColor);}
+  input[type="button"].selected:hover {background-color: var(--buttonActiveColor);}
+}

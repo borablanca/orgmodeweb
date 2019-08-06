@@ -21,7 +21,7 @@
       .split(" ")
       .filter(Boolean)
       .join("|")
-    })?\\s*(?:\\[#([a-zA-Z])\\])?\\s*(.*?)[ \\t]*(:[^\\s]+:)?\\s*(?:\\r\\n?)?$`);
+  })?\\s*(?:\\[#([a-zA-Z])\\])?\\s*(.*?)[ \\t]*(:[^\\s]+:)?\\s*(?:\\r\\n?)?$`);
 
   const createTimestamp = (match) => ({
     "ml": new Date(match[1], match[2] - 1, match[3]).getTime(), // miliseconds

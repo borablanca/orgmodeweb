@@ -24,9 +24,9 @@
     const {icon, textIcon} = ORG.Icons;
     this.find(".orgnotify").off().remove(); // remove any previous notify
     const $notify = $(document.createElement("div")).addClass("orgnotify").append(
-      `<div class="">
+      `<div>
 ${plan.message ? `<div class="orgmessage">${plan.message}</div>` : ""}
-${plan.items ? `<div${plan.grid ? " class='grid'" : ""}>
+${plan.items ? `<div${plan.grid ? " class='" + plan.grid + "'" : ""}>
 ${plan.items.map((item) => textIcon(item.name)).join("")}
 </div>` : ""}
 ${plan.prompt ? `${[...Array(plan.prompt).keys()].map((idx) => `
@@ -43,20 +43,24 @@ ${plan.confirm ? `<div class="grid">${icon("done")}${icon("close")}</div>` : ""}
     if (plan.items) {
       $notify.on("click", ".orgicon", function () {
         const itemFn = plan.items[$(this).index()].fn;
-        return $.isFunction(itemFn) ? itemFn() : ORG.route(itemFn);
+        if ($.isFunction(itemFn)) itemFn();
+        else ORG.route(itemFn);
+        removeFn();
+        return false;
       });
     }
 
     $notify
-      .on("click", (ev) => ev.target.nodeName !== "INPUT" && !plan.sticky && removeFn())
-      .on("click", "*:not(input)", function (ev) {
-        if (ev.target !== this) return true;
-        if ($(this).hasClass("done")) {
-          plan.confirm.apply(this, plan.prompt ? $notify.find("input").map((idx, inpt) => inpt.value).toArray() : null);
-        } else if (plan.cancel) {
-          plan.cancel();
+      .on("click", function (ev) {
+        if (ev.target === this) return removeFn();
+        const $orgicon = $(ev.target).closest(".orgicon");
+
+        if ($orgicon[0]) {
+          if ($orgicon.is(".done")) {
+            plan.confirm.apply(this, plan.prompt ? $notify.find("input").map((idx, inpt) => inpt.value).toArray() : null);
+          } else if (plan.cancel) plan.cancel();
+          removeFn();
         }
-        if (!plan.sticky) removeFn();
         return false;
       })
       .hide()

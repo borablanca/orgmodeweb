@@ -268,7 +268,8 @@
               fits.offset = offset;
             }
           }
-        } else if (curStmp = searchNode.SCHEDULED) { // SCHEDULE exists
+        }
+        if (curStmp = searchNode.SCHEDULED) { // SCHEDULE exists
           const nodeProps = searchNode.PROPS;
           ml = curStmp.ml;
           if (sml === ml && !curStmp.w && // slot matches node and no delay

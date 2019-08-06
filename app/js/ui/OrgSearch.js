@@ -159,8 +159,8 @@
     const uiSettings = {
       "deadlineLeaders": ORG.Utils.quoteSplit(settings["agenda-deadline-leaders"]),
       "scheduledLeaders": ORG.Utils.quoteSplit(settings["agenda-scheduled-leaders"]),
-      "days": ORG.Calendar.getDayNames(),
-      "months": ORG.Calendar.getMonthNames(),
+      "days": ORG.Settings.getDayNames(),
+      "months": ORG.Settings.getMonthNames(),
       "todoKeywords": ORG.Settings.getTodoKeywords(settings, {}),
     };
     const nodes = search(searchPlan, ORG.Store, settings)

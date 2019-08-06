@@ -60,11 +60,16 @@
   }
   return window.ORG = {
     "route": null,
+    "defaults": null,
     "Icons": null,
     "Parser": null,
     "Searcher": null,
     "Writer": null,
     "Sorter": null,
-    "Utils": null
+    "Utils": null,
+    "Calendar": null,
+    "Store": null,
+    "Sync": null,
+    "Settings": null
   };
 })();

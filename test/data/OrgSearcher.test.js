@@ -697,12 +697,12 @@ SCHEDULED: <2018-0-15>`
       prev = cur;
       cur = new Date(mlStart).setMonth(timeSpan);
     }
+    const offset = (mlEnd - prev) / DAY;
     assert.equal(slots[0].length, 1);
     assert.equal(slots[0][0].TYPE, SearchItemType.SCH);
-    assert.equal(slots[0][0].OFFSET, (mlEnd - prev) / DAY);
+    assert.equal(slots[0][0].OFFSET, offset);
     assert.equal(slots[1].length, 0);
     assert.equal(slots[2].length, 0);
-    assert.equal(slots[3].length, 0);
   });
   QUnit.test("repeater 5", (assert) => {
     const slots = search([{

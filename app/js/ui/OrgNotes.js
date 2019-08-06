@@ -8,7 +8,7 @@
 
   const itemBodyTmpl = (node) => {
     const propKeys = Object.keys(node.PROPS);
-    const days = ORG.Calendar.getDayNames();
+    const days = ORG.Settings.getDayNames();
     return `<div class="body">
   ${node.CLOSED ? `<div class="cls">CLOSED: <span class="ts">${writeTimestamp(node.CLOSED, days, 1)}</span></div>` : ""}
   ${node.DEADLINE ? `<div class="dl">DEADLINE: <span class="ts">${writeTimestamp(node.DEADLINE, days)}</span></div>` : ""}
@@ -26,7 +26,7 @@
   </li>`;
 
   const editTmpl = (node = {"LVL": 1, "PROPS": {}, "TEXT": []}) => {
-    const days = ORG.Calendar.getDayNames();
+    const days = ORG.Settings.getDayNames();
     const todoTxt = (node.TODO ? `${node.TODO} ` : "") + (node.PRI ? `[#${node.PRI}] ` : "");
     let bodyTxt = "";
     if (node.CLOSED) bodyTxt += `CLOSED: ${writeTimestamp(node.CLOSED, days, 1)}\n`;
@@ -423,7 +423,7 @@
                 events.save(this);
               };
               this.orgNotify({
-                "grid": 1,
+                "grid": "grid",
                 "items": [{
                   "name": "None",
                   "fn": updateFn("")
@@ -432,6 +432,8 @@
                   "fn": updateFn(keyword)
                 })))
               });
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
             }
             return $li;
           }
@@ -453,7 +455,7 @@
                 events.save(this);
               };
               this.orgNotify({
-                "grid": 1,
+                "grid": "grid",
                 "items": [{
                   "name": "None",
                   "fn": updateFn("")
@@ -462,6 +464,8 @@
                   "fn": updateFn(letter)
                 })))
               });
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
             }
             return $li;
           }
@@ -477,17 +481,59 @@
                 "message": "Set Tag(s):",
                 "prompt": 1,
                 "confirm": (tags) => {
-                  node.TAGS = ":" + tags.split(/:| /).filter(Boolean).join(":") + ":";
+                  node.TAGS = ":" + [...new Set(tags.split(/:| /).filter(Boolean))].join(":") + ":";
                   $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
                   events.save(this);
                 },
                 "value0": node.TAGS
               });
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
             }
           }
         },
-        "SCH": {"type": ICONTYPE.TEXT, "fn": ""},
-        "DL": {"type": ICONTYPE.TEXT, "fn": ""},
+        "SCH": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const node = $li.data("node");
+              this.orgCalendar(
+                ORG.Calendar.TYPE.SCH,
+                node.SCHEDULED,
+                (timeStr) => {
+                  node.SCHEDULED = ORG.Parser.parseTimestamp(timeStr);
+                  $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                  events.save(this);
+                }
+              );
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
+            }
+          }
+        },
+        "DL": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => {
+            const $li = this.find("#cursor");
+
+            if ($li[0] && !$li.is(".orgbuffertext")) {
+              const node = $li.data("node");
+              this.orgCalendar(
+                ORG.Calendar.TYPE.DL,
+                node.DEADLINE,
+                (timeStr) => {
+                  node.DEADLINE = ORG.Parser.parseTimestamp(timeStr);
+                  $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
+                  events.save(this);
+                }
+              );
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
+            }
+          }
+        },
         "PROP": {
           "type": ICONTYPE.TEXT,
           "fn": () => {
@@ -500,7 +546,7 @@
                 "prompt": 2,
                 "confirm": (propKey, propVal) => {
                   if (propKey) {
-                    node.PROPS[propKey] = propVal;
+                    node.PROPS[propKey.toUpperCase()] = propVal;
                     $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
                     events.save(this);
                   }
@@ -508,10 +554,11 @@
                 "placeholder0": "Property Key",
                 "placeholder1": "Property Value"
               });
+            } else {
+              this.orgNotify({"message": "Select a heading!"});
             }
           }
-        },
-        "NOTE": {"type": ICONTYPE.TEXT, "fn": ""}
+        }
       }).addClass("gridrow"),
       `<ul class="orgnotes orglist orgview">
       ${bufferTextTmpl(nodes)}

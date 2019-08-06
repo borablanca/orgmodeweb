@@ -28,7 +28,7 @@
   ORG.Writer = {
     writeTimestamp,
     "writeFile": (nodes) => { // eslint-disable-line
-      const days = ORG.Calendar.getDayNames();
+      const days = ORG.Settings.getDayNames();
       if (!Array.isArray(nodes)) return "";
       let fileText = nodes.TEXT && nodes.TEXT.length ? nodes.TEXT + "\n" : "";
 

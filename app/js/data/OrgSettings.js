@@ -33,6 +33,8 @@
       }
       return agenda;
     }, {}),
+    "getDayNames": (settings = ORG.Settings.getSettingsObj()) => settings["calendar-day-names"].split(/\s+/),
+    "getMonthNames": (settings = ORG.Settings.getSettingsObj()) => settings["calendar-month-names"].split(/\s+/),
     "getSettings": (userSettingsOnly) => {
       const defaultSettings = ORG.defaults;
       const userSettings = getSettingsObj(1);
