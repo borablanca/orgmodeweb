@@ -23,7 +23,7 @@
 
   const agendaItemTmpl = (node, settings) => singleLine`
   <li class="lvl1" data-url="#notes#${node.FILEID}#${node.ID}">
-    <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
+    <button type="button" class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
     <span>
     ${timeTmpl(node, settings)}
     ${node.RANGE ? `(${node.RANGE}): ` : ""}
@@ -35,7 +35,7 @@
 
   const tagItemTmpl = (node) => singleLine`
   <li class="lvl1" data-url="#notes#${node.FILEID}#${node.ID}">
-    <button class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
+    <button type="button" class="oneline lvl2">${formatStr(" %-8c", node.CATEGORY || node.ICATEGORY)}</button>
     <span>
     ${node.TODO ? `<span class="orgtodo ${node.TODO}">${node.TODO} </span>` : ""}
     ${node.PRI ? `<span class="pri">[#${node.PRI}] </span>` : ""}
@@ -50,7 +50,7 @@
       ${nodes.map((node) => agendaItemTmpl(node, uisettings)).join("")}`;
     },
 
-    "search": (nodes) => `<li class="orgsearchslot"><span>${$.htmlEncode(nodes.header)}</span>${nodes.map((node) => tagItemTmpl(node)).join("")}</div>`
+    "search": (nodes) => `<li class="orgsearchslot"><span>${ORG.Utils.htmlEncode(nodes.header)}</span>${nodes.map((node) => tagItemTmpl(node)).join("")}</div>`
   };
 
   const events = {
@@ -83,72 +83,59 @@
     },
   };
 
-  const init = ($container) => {
-    const moveCursor = (fn, headerFlag) => {
-      const $selected = $container.find(".select");
-      const $headings = $container.find(headerFlag && $selected.hasClass("header") ? ".header" : "pre:visible");
-      let index = $headings.index($selected);
-      $headings.eq(fn ? --index : ++index % $headings.length).mark($selected);
-      return false;
-    };
+  const bindKeyboard = ($orgpage) => ORG.Keyboard.bind({
+    "n": ORG.Keyboard.common.cursorDown,
+    "down": ORG.Keyboard.common.cursorDown,
+    "p": ORG.Keyboard.common.cursorUp,
+    "up": ORG.Keyboard.common.cursorUp,
+    "f": () => {
+      const $next = $("#cursor", $orgpage).nextAll(".orgsearchslot").eq(0);
+      return $next[0] &&
+        !$next.cursor().isInViewport() &&
+        $next.scrollTo() &&
+        false;
+    },
+    "b": () => {
+      const $prev = $("#cursor", $orgpage).prevAll(".orgsearchslot").eq(0);
+      return $prev[0] &&
+        !$prev.cursor().isInViewport() &&
+        $prev.scrollTo() &&
+        false;
+    },
+    "u": () => {
+      const $cursor = $("#cursor", $orgpage);
 
-    const filter = () => {
-      const filterData = $container.data("filter");
-      const $allPre = $container.find("pre:not(.header)");
+      if (!$cursor.hasClass("orgsearchslot")) {
+        const $prev = $cursor.prevAll(".orgsearchslot").eq(0);
 
-      if (filterData.cat) {
-        delete filterData.cat;
-        $allPre.show();
-      } else {
-        const $target = $container.find(".select button");
-
-        if ($target[0]) {
-          const filter = $target.text().trim();
-          filterData.cat = filter;
-          $allPre.each((i, pre) => {
-            const $pre = $(pre);
-            $pre.find("button").text().trim() !== filter && $pre.hide();
-          });
+        if ($prev[0] && !$prev.cursor().isInViewport()) {
+          $prev.scrollTo();
         }
       }
-      $container.data("filter", filterData);
       return false;
-    };
+    },
+    "return": () => events.open($("#cursor", $orgpage)),
+    "o": () => events.open($("#cursor", $orgpage)),
+    "tab": () => {
+      const $cursor = $("#cursor", $orgpage);
+      return events[
+        $cursor.hasClass("orgsearchslot") ? "cycle" : "open"
+      ]($cursor);
+    },
+    "alt+<": ORG.Keyboard.common.cursorFirst,
+    "alt+shift+<": ORG.Keyboard.common.cursorLast,
+    "shift+tab": () => $orgpage.find(".orgnavbar .cycle a").click(),
+    "ctrl+l": () => $("#cursor", $orgpage).scrollTo()
+  });
 
-
-    /*
-     * if (!ORG.Utils.isMobile) {
-     *   $(document).orgKeyboard({
-     *     "return": () => events.open($container.find(".select")),
-     *     "o": () => events.open($container.find(".select")),
-     *     "tab": () => {
-     *       const $selected = $container.find(".select");
-     *       return events[$selected[0].classList.contains("header") ? "cycle" : "open"]($selected);
-     *     },
-     *     "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-     *     "ctrl+l": () => $container.find(".select").scrollCycle(),
-     *     "b": () => moveCursor("prev", 1),
-     *     "f": () => moveCursor(0, 1),
-     *     "n": () => moveCursor(),
-     *     "down": () => moveCursor(),
-     *     "p": () => moveCursor("prev"),
-     *     "up": () => moveCursor("prev"),
-     *     "u": () => {
-     *       const $selected = $container.find(".select");
-     *       return $selected.prevAll(".header").mark($selected);
-     *     },
-     *     "<": filter,
-     *     "alt+<": () => $container.find("pre").first().mark(),
-     *     "alt+shift+<": () => $container.find("pre").last().mark(),
-     *   });
-     * }
-     */
-    return $container.on("click", "li", function () {
+  const init = ($orgpage) => {
+    bindKeyboard($orgpage);
+    return $orgpage.on("click", "li", function () {
       const $li = $(this);
       events[$li.hasClass("orgsearchslot") ? "cycle" : "open"]($li).cursor();
       return false;
     }).on("click", "button", (ev) => {
-      filter();
+      // filter(); // TODO
       $(ev.target).closest("li").cursor();
       return false;
     }).on("click", ".orglink", (ev) => ev.preventDefault());
@@ -184,9 +171,32 @@
           }
         }
       }).addClass("flex"),
+      searchPlan.map((slot) => slot.type).includes("agenda") ?
+        $(document.createElement("div")).orgNavbar({
+          "<": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => { }
+          },
+          "TODAY": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => { }
+          },
+          "DAY": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => { }
+          },
+          "WEEK": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => { }
+          },
+          ">": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => { }
+          }
+        }).addClass("gridrow") : "",
       `<ul class="orgsearch orglist${ORG.Utils.isMobile ? " nocursor" : ""}">
       ${nodes.map((slot) => itemTmpl[slot.type](slot, uiSettings)).join("")}
-      <ul>`,
+      </ul>`,
       ORG.Settings.getStyles()
     ).find("li:first-child").cursor().end());
 

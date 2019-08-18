@@ -81,6 +81,7 @@
     "Tokens": {
       "Dropbox": "__dbxtkn__",
       "Settings": "__orgsettings__",
+      "Theme": "__orgtheme__"
     },
     getFileList,
     SyncStatus,
@@ -201,6 +202,10 @@
     },
     "deleteToken": (tokenType) => {
       del(tokenType);
+      return true;
+    },
+    "setTheme": (theme = "") => {
+      (theme ? set : del)(ORG.Store.Tokens.Theme, theme);
       return true;
     }
   };

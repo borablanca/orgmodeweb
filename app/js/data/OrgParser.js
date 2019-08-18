@@ -158,11 +158,11 @@
             typeof (line = text[++lineIdx]) === "string" &&
             !DrawerEndRE.test(line)
           ) {
-            bodyHtml += `<div>${markup(line + "\n")}</div>`;
+            bodyHtml += `<div>${markup(line)}<br/></div>`;
           }
           bodyHtml += "<div class='orgdim'>:END:</div></div>";
         } else {
-          bodyHtml += `<div>${markup(line + "\n")}</div>`;
+          bodyHtml += `<div>${markup(line)}<br/></div>`;
         }
       }
       return bodyHtml;

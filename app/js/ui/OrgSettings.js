@@ -1,114 +1,126 @@
 (() => {
   const itemTmpl = (setting, collapsed = false) => `
   <li class="${collapsed ? "collapsed " : ""}lvl1" data-setting="${setting.name}" data-lvl="1">
-   <span class="title">${setting.name}</span>
-   <pre class="body lvl2">${setting.value}</pre>
+   <span class="title">${ORG.Utils.htmlEncode(setting.name)}</span>
+   <pre class="body lvl2">${ORG.Utils.htmlEncode(setting.value) + "&nbsp;"}</pre>
   </li>`;
 
-  const editTmpl = (setting = { "name": "", "value": "" }) => `<li class="border cf lvl1 inedit">
+  const editTmpl = (setting = {"name": "", "value": ""}) => `<li class="border cf lvl1 inedit">
  <input type="text" class="lvl1" spellcheck="false" placeholder="setting name" value="${setting.name}"/>
  <textarea class="lvl2" spellcheck="false" placeholder="value">${setting.value}</textarea>
  ${ORG.Icons.icon(setting.name ? setting.default ? "reset" : "delete" : "")}${ORG.Icons.icon("close")}${ORG.Icons.icon("done")}
 </li>`;
 
-  const init = ($container) => {
-    let textareaTimeout;
-    const events = {
-      "close": ($li) => {
-        const setting = $li.data("item");
+  const events = {
+    "close": ($li) => {
+      const setting = $li.data("item");
 
-        if (setting) {
-          return $(itemTmpl(setting)).data("item", setting).replaceAll($li);
-        }
-        const $prev = $li.prev();
-        if (!$prev[0]) $prev = $li.next();
-        $li.remove();
-        return $prev;
-      },
-      "delete": ($li) => {
-        const setting = $li.data("item");
-        $li.closest(".orgpage")
-          .orgNotify({
-            "grid": 1,
-            "message": `Delete setting "${setting.name}"?`,
-            "confirm": () => {
-              try {
-                if (ORG.Settings.deleteSetting(setting)) {
-                  const $prev = $li.prev();
-                  if ($prev[0]) $prev.cursor();
-                  else $li.next().cursor();
-                  $li.remove();
-                }
-              } catch (errorText) {
-                this.closest(".orgpage").orgNotify({ "message": errorText });
-              }
+      if (setting) {
+        return $(itemTmpl(setting)).data("item", setting).replaceAll($li);
+      }
+      let $prev = $li.prev();
+      if (!$prev[0]) $prev = $li.next();
+      $li.remove();
+      return $prev;
+    },
+    "delete": ($li) => {
+      const setting = $li.data("item");
+      const $orgpage = $li.closest(".orgpage").orgNotify({
+        "grid": 1,
+        "message": `Delete setting "${setting.name}"?`,
+        "confirm": () => {
+          try {
+            if (ORG.Settings.deleteSetting(setting)) {
+              const $prev = $li.prev();
+              if ($prev[0]) $prev.cursor();
+              else $li.next().cursor();
+              $li.remove();
             }
-          });
-        return $();
-      },
-      "done": ($li) => {
-        const oldSetting = $li.data("item");
-        const newSetting = {
-          "name": $li.find("input").val().trim(),
-          "value": $li.find("textarea").val().trim(),
-          "default": oldSetting ? oldSetting.default : false
-        };
-
-        try {
-          if (ORG.Settings.saveSetting(newSetting, oldSetting)) {
-            return $(itemTmpl(newSetting)).data("item", newSetting).replaceAll($li).cursor();
+          } catch (errorText) {
+            $orgpage.orgNotify({"message": errorText});
           }
-        } catch (errorMessage) {
-          $li.closest(".orgpage").orgNotify({ "message": errorMessage });
+        },
+        "rebind": () => bindKeyboard($orgpage) // eslint-disable-line no-use-before-define
+      });
+      return $();
+    },
+    "done": ($li) => {
+      const oldSetting = $li.data("item");
+      const newSetting = {
+        "name": $li.find("input").val().trim(),
+        "value": $li.find("textarea").val().trim(),
+        "default": oldSetting ? oldSetting.default : false
+      };
+
+      try {
+        if (ORG.Settings.saveSetting(newSetting, oldSetting)) {
+          return $(itemTmpl(newSetting)).data("item", newSetting).replaceAll($li).cursor();
         }
-        return $();
-      },
-      "edit": ($li) => {
-        $li.closest(".orgpage").find(".inedit .orgicon.close").click();
-        const item = $li.data("item");
-        return $(editTmpl(item)).data("item", item).replaceAll($li);
-      },
-      "reset": ($li) => $li.closest(".orgpage").orgNotify({
+      } catch (errorMessage) {
+        $li.closest(".orgpage").orgNotify({"message": errorMessage});
+      }
+      return $();
+    },
+    "edit": ($li) => {
+      $li.closest(".orgpage").find(".inedit .orgicon.close").click();
+      const item = $li.data("item");
+      return $(editTmpl(item)).data("item", item).replaceAll($li);
+    },
+    "reset": ($li) => {
+      const $orgpage = $li.closest(".orgpage").orgNotify({
         "grid": 1,
         "message": `Reset to default "${$li.data("item").name}"?`,
         "confirm": () => {
           const setting = ORG.Settings.deleteSetting($li.data("item"));
           $(itemTmpl(setting)).data("item", setting).replaceAll($li).cursor();
-        }
-      }),
-    };
+        },
+        "rebind": () => bindKeyboard($orgpage) // eslint-disable-line no-use-before-define
+      });
+      return $li;
+    }
+  };
 
-    /*
-     * if (!$.isMobile()) {
-     *   $(document).orgKeyboard({
-     *     "return": [() => events.edit($container.find(".select")), {
-     *       "delegate": "input",
-     *       "fn": (ev) => $(ev.target).next().focus().moveCaret().trigger("keydown"),
-     *     }],
-     *     "esc": [() => $container.find(".select.edit .close").click(), {
-     *       "delegate": "input,textarea",
-     *       "fn": (ev) => $(ev.target).siblings(".close").click(),
-     *     }],
-     *     "ctrl+return": [() => $container.find(".orgnavbar .add").click(), {
-     *       "delegate": "input,textarea",
-     *       "fn": (ev) => $(ev.target).siblings(".done").click(),
-     *     }],
-     *     "shift+tab": () => $container.find(".orgnavbar .cycle").click(),
-     *     "tab": () => {
-     *       const $selected = $container.find(".select");
-     *       return $selected.hasClass("edit") ? $selected.find("input").focus() : $selected.toggleClass("collapsed");
-     *     },
-     *     "n": () => $container.find(".select").move(),
-     *     "down": [() => $container.find(".select").move(), {
-     *       "delegate": "input",
-     *       "fn": (ev) => $(ev.target).next().focus(),
-     *     }],
-     *     "p": () => $container.find(".select").move("prev"),
-     *     "up": () => $container.find(".select").move("prev"),
-     *   });
-     * } else {
-     */
-    return $container.on("click", "li:not(.inedit)", function () {
+  const bindKeyboard = ($orgpage) => ORG.Keyboard.bind({
+    "n": ORG.Keyboard.common.cursorDown,
+    "down": [ORG.Keyboard.common.cursorDown, {
+      "delegate": "input",
+      "fn": (ev) => $(ev.target).next().focus(),
+    }],
+    "p": ORG.Keyboard.common.cursorUp,
+    "up": ORG.Keyboard.common.cursorUp,
+    "f": ORG.Keyboard.common.cursorForward,
+    "b": ORG.Keyboard.common.cursorBackward,
+    "alt+<": ORG.Keyboard.common.cursorFirst,
+    "alt+shift+<": ORG.Keyboard.common.cursorLast,
+    "t": () => $(".orgactionbar .Theme", $orgpage).click(),
+    "return": [() => events
+      .edit($("#cursor", $orgpage))
+      .cursor()
+      .find("textarea").autoHeight().end()
+      .find("input").textFocus(),
+    {
+      "delegate": "input",
+      "fn": (ev) => $(ev.target).next().focus(),
+    }],
+    "esc": [() => $(".inedit .close", $orgpage).click(), {
+      "delegate": "input,textarea",
+      "fn": (ev) => $(ev.target).siblings(".close").click(),
+    }],
+    "ctrl+return": [() => $orgpage.find(".orgnavbar .add").click(), {
+      "delegate": "input,textarea",
+      "fn": (ev) => $(ev.target).siblings(".done").click(),
+    }],
+    "shift+tab": () => $orgpage.find(".orgnavbar .cycle a").click(),
+    "tab": () => {
+      const $cursor = $("#cursor", $orgpage);
+      return $cursor.hasClass("inedit") ? $cursor.find("input").focus() : $cursor.cycle();
+    },
+  });
+
+  const init = ($orgpage) => {
+    let textareaTimeout;
+    bindKeyboard($orgpage);
+    return $orgpage.on("click", "li:not(.inedit)", function () {
       $(this).cursor().cycle();
       return false;
     }).on("click", "pre", (ev) => {
@@ -130,12 +142,12 @@
   };
 
   $.fn.orgSettings = function (settings) {
-    const { ICONTYPE } = ORG.Icons;
+    const {ICONTYPE} = ORG.Icons;
     const $orgSettings = init(this.removeData().off().empty().append(
       $(document.createElement("div")).orgNavbar({
-        "org": { "type": ICONTYPE.ICON, "fn": "#" },
-        "back": { "type": ICONTYPE.ICON, "fn": () => history.back() },
-        "title": { "type": "Settings" },
+        "org": {"type": ICONTYPE.ICON, "fn": "#"},
+        "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
+        "title": {"type": "Settings"},
         "add": {
           "type": ICONTYPE.ICON,
           "fn": () => {
@@ -155,12 +167,32 @@
           "fn": () => this.orgNotify({
             "message": "Reset all settings to default values?",
             "confirm": () => ORG.Settings.resetSettings() && this.orgSettings(ORG.Settings.getSettings()),
+            "rebind": () => bindKeyboard(this)
           })
         },
       }).addClass("flex"),
       $(document.createElement("div")).orgNavbar({
-        "Change Theme": () => { }
-      }).addClass("grid"),
+        "Change Theme": {
+          "type": ICONTYPE.TEXT,
+          "fn": () => this.orgNotify({
+            "grid": "grid",
+            "items": [{
+              "name": "Dark",
+              "fn": () => {
+                ORG.Store.setTheme();
+                location.reload();
+              }
+            }, {
+              "name": "Light",
+              "fn": () => {
+                ORG.Store.setTheme("light");
+                location.reload();
+              }
+            }],
+            "rebind": () => bindKeyboard(this)
+          })
+        }
+      }).addClass("grid orgactionbar"),
       `<ul class="orglist orgview${ORG.Utils.isMobile ? " nocursor" : ""}">
       ${settings.map((setting) => itemTmpl(setting, true)).join("")}
       </ul>`));

@@ -41,6 +41,6 @@
 <path d="${icon[1]}" fill="${_opts.color}"/>
 </svg>` : "";
     },
-    "textIcon": (iconName, opts = {}) => `<a class="orgicon ${iconName} nowrap ${opts.clss || ""}">${iconName}</a>`
+    "textIcon": (iconName, opts = {}) => `<a class="orgicon ${iconName} nowrap ${opts.clss || ""}">${opts.idx ? `<b>${opts.idx}</b>` : ""}${iconName}</a>`
   };
 })();

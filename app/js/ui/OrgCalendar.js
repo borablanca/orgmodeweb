@@ -17,26 +17,26 @@
 <div class="grid grid7">
 ${textIcon("<<")}${textIcon("<")}${textIcon("TODAY")}${textIcon(">")}${textIcon(">>")}
 ${dayNames.map((dd, idx) => `<b class="orgday">${dayNames[(idx + 1) % 7]}</b>`).join("")}
-${[...Array(((new Date(year, month)).getDay() + 6) % 7).keys()].map((_) => "<b/>").join("")}
+${[...Array(((new Date(year, month)).getDay() + 6) % 7).keys()].map(() => "<b/>").join("")}
 ${[...Array(ndays).keys()].map((idx) => `<input type="button" value="${idx + 1}"/>`).join("")}
 ${[...Array(ndays < 31 ? 6 : 5).keys()].map(() => "<b>&nbsp;</b>").join("")}
 </div></div>`;
   };
 
   const updateDateStr = ($calendar) => {
-    const curDay = $calendar.find(".selected").val();
-    const curMonth = $calendar.find("input[name=month]").val();
-    const curYear = $calendar.find("input[name=year]").val();
-    let curHour = $calendar.find("input[type=range]").val();
-    const $repeaterType = $calendar.find("input[name=repeatType]");
-    const $warnRange = $calendar.find("input[name=warnRange]");
-    curHour = curHour === "0" ? "" :
-      ("0" + (Math.ceil(curHour / 2.0) - 1)).slice(-2) + ":" + (curHour % 2 === 1 ? "00" : "30");
+    let hour = $calendar.find("input[type=range]").val();
+    const repeaterType = $calendar.find("input[name=repeatType]").val();
+    const warnRange = $calendar.find("input[name=warnRange]").val();
+    hour = hour === "0" ? "" :
+      ("0" + (Math.ceil(hour / 2.0) - 1)).slice(-2) + ":" + (hour % 2 === 1 ? "00" : "30");
 
-    $calendar.find(".orgdate").text(`<${
-      curYear + "-" +
-      ("0" + (curMonth - -1)).slice(-2) + "-" +
-      ("0" + curDay).slice(-2)}${curHour ? " " + curHour : ""}${$repeaterType.val() ? ` ${$repeaterType.val()}${$calendar.find("input[name=repeat]").val()}${$calendar.find("input[name=repeatRange]").val()}` : ""}${$warnRange.val() ? ` -${$calendar.find("input[name=warn]").val()}${$warnRange.val()}` : ""}>`);
+    return $calendar.find(".orgdate").text(`<${
+      $calendar.find("input[name=year]").val() + "-" +
+      ("0" + (+$calendar.find("input[name=month]").val() + 1)).slice(-2) + "-" +
+      ("0" + $calendar.find(".orgmonth .selected").val()).slice(-2) +
+      (hour ? " " + hour : "") +
+      (repeaterType ? " " + repeaterType + $calendar.find("input[name=repeat]").val() + $calendar.find("input[name=repeatRange]").val() : "") +
+      (warnRange ? " -" + $calendar.find("input[name=warn]").val() + warnRange : "")}>`).end();
   };
 
   ORG.Calendar = {
@@ -134,6 +134,7 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
         $calendar.find(".orgmonth .selected").removeClass("selected");
         $(this).addClass("selected");
         updateDateStr($calendar);
+        return false;
       })
       .on("click", function (ev) { // eslint-disable-line max-statements
         if (ev.target === this) {
@@ -142,12 +143,12 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
         const $orgicon = $(ev.target).closest(".orgicon");
 
         if ($orgicon[0]) {
-          const iconType = $orgicon[0].classList[1];
+          const confirmIconType = $orgicon[0].classList[1];
 
-          if (["done", "delete", "close"].includes(iconType)) {
-            if (iconType === "done") {
+          if (["done", "delete", "close"].includes(confirmIconType)) {
+            if (confirmIconType === "done") {
               successFn($calendar.find(".orgdate").text());
-            } else if (iconType === "delete") {
+            } else if (confirmIconType === "delete") {
               successFn();
             }
             return $calendar.off().fadeOut(150, () => $calendar.remove());
@@ -255,7 +256,7 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
       }
     }
 
-    updateDateStr($calendar.appendTo(this).fadeIn(150));
+    updateDateStr($calendar).appendTo(this).fadeIn(150);
     return this;
   };
 })();

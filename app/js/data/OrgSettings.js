@@ -22,6 +22,24 @@
     }
   };
 
+  const THEMES = {
+    "light": {
+      "background": "#fffeee",
+      "button": "#c1c1c1",
+      "buttonActive": "#e1e1e1",
+      "buttonHover": "#d1d1d1",
+      "buttonForeground": "#111",
+      "headingHover": "#f3f3f3",
+      "dim": "#ccc",
+      "firstLevel": "#00f",
+      "secondLevel": "#CC4F35",
+      "thirdLevel": "#AB3FFF",
+      "text": "#000",
+      "sync": "#00f",
+      "insync": "#e0c602"
+    }
+  };
+
   ORG.Settings = {
     "getAgendaDeadlineLeaders": (settings = getSettingsObj()) => quoteSplit(settings["agenda-deadline-leaders"]),
     "getAgendaScheduleLeaders": (settings = getSettingsObj()) => quoteSplit(settings["agenda-scheduled-leaders"]),
@@ -102,15 +120,39 @@
       return true;
     },
     "resetSettings": () => saveSettings({}),
-    "setTheme": (theme) => {
+    "loadTheme": (theme) => {
       const rootStyles = document.documentElement.style;
 
       if ($.isPlainObject(theme)) {
         Object.keys(theme)
-          .forEach((varName) => rootStyles.setProperty(varName, theme[varName]));
+          .forEach((varName) => rootStyles.setProperty("--" + varName, theme[varName]));
+        ORG.defaults["todo-faces"] = "TODO --color #000\nDONE --color #0f0";
+        if (theme.buttonForeground) {
+          ORG.Icons.setDefault({"color": theme.buttonForeground});
+        }
       } else {
-        // TODO
+        [
+          "background",
+          "button",
+          "buttonActive",
+          "buttonHover",
+          "headingHover",
+          "cursor",
+          "cursorEdit",
+          "dim",
+          "link",
+          "firstLevel",
+          "secondLevel",
+          "thirdLevel",
+          "text",
+          "timestamp",
+          "sync",
+          "conflict",
+          "insync"
+        ].map((varName) => rootStyles.removeProperty("--" + varName));
+        ORG.Icons.setDefault({"color": "#eee"});
       }
     }
   };
+  ORG.Settings.loadTheme(THEMES[ORG.Store.getToken(ORG.Store.Tokens.Theme)]);
 })();

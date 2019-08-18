@@ -9,32 +9,24 @@
 </li>`;
   };
 
-  const init = ($container) => {
-    /*
-     * const gotoFn = () => {
-     *   const $selected = $container.find(".select a,.select button");
-     *   return $selected[0] && $selected[0].click();
-     * };
-     */
+  const bindKeyboard = ($orgpage) => ORG.Keyboard.bind({
+    "n": ORG.Keyboard.common.cursorDown,
+    "down": ORG.Keyboard.common.cursorDown,
+    "p": ORG.Keyboard.common.cursorUp,
+    "up": ORG.Keyboard.common.cursorUp,
+    "return": () => {
+      const $cursor = $("#cursor a, #cursor button", $orgpage);
+      return $cursor[0] && $cursor[0].click();
+    },
+    "tab": () => {
+      const $cursor = $("#cursor a, #cursor button", $orgpage);
+      return $cursor[0] && $cursor[0].click();
+    }
+  });
 
-    /*
-     * const nextFn = () => $container.find(".select").move();
-     * const prevFn = () => $container.find(".select").move("prev");
-     */
-
-    /*
-     * if (!$.isMobile()) {
-     *   $(document).orgKeyboard({
-     *     "return": gotoFn,
-     *     "tab": gotoFn,
-     *     "n": nextFn,
-     *     "down": nextFn,
-     *     "p": prevFn,
-     *     "up": prevFn,
-     *   });
-     * }
-     */
-    return $container.on("click", "a", (ev) => {
+  const init = ($orgpage) => {
+    bindKeyboard($orgpage);
+    return $orgpage.on("click", "a", (ev) => {
       if (!$(ev.currentTarget).attr("href")) {
         const $li = $(ev.currentTarget).closest("li");
         const $page = $li

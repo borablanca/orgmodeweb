@@ -1,38 +1,41 @@
 :root {
-  --bgColor: #222;
-  --buttonColor: #444;
-  --buttonActiveColor: #777;
-  --buttonHoverColor: #555;
-  --nodeHoverColor: #303030;
-  --cursorColor: #f00;
-  --cursorEditColor: #0f0;
-  --dimColor: #777;
-  --linkColor: #f5f;
-  --firstLevelColor: #0ff;
-  --secondLevelColor: #fa0;
-  --thirdLevelColor: #88f;
-  --textColor: #eee;
-  --timestampColor: #aa1;
+  --background: #222;
+  --button: #444;
+  --buttonActive: #777;
+  --buttonHover: #555;
+  --headingHover: #303030;
+  --cursor: #f00;
+  --cursorEdit: #0f0;
+  --dim: #777;
+  --link: #f5f;
+  --firstLevel: #0ff;
+  --secondLevel: #fa0;
+  --thirdLevel: #88f;
+  --text: #eee;
+  --timestamp: #aa1;
+  --sync: #0f0;
+  --conflict: #f00;
+  --insync: #ff0
 }
 * {box-sizing: border-box; margin: 0; padding: 0; outline: none;}
 html, input, textarea {font-family: Consolas, monaco, monospace;}
 button, input[type="button"]{
-  background-color: var(--bgColor);
+  background-color: var(--background);
   border: none;
-  color: var(--textColor);
+  color: var(--text);
   cursor: pointer;
 }
 textarea {overflow-y: hidden;}
-body {background-color: var(--bgColor); color: var(--textColor);}
+body {background-color: var(--background); color: var(--text);}
 pre {font-family: inherit; white-space: pre-wrap;}
 .orgpage {display: flex; flex-flow: column; height: 100vh; position: relative;}
 a {
   -webkit-touch-callout: none;
-  color: var(--textColor);
+  color: var(--text);
   height: 100%;
   text-decoration: none;
 }
-a.orglink {color: var(--linkColor);}
+a.orglink {color: var(--link);}
 input[type="number"],input[type="text"],textarea {
   background: transparent;
   border: none;
@@ -41,15 +44,17 @@ input[type="number"],input[type="text"],textarea {
   width: 100%;
 }
 .orgicon {
-  background-color: var(--buttonColor);
+  background-color: var(--button);
   cursor: pointer;
   flex-shrink: 0;
   height: 48px;
   line-height: 40px;
   padding: 4px 8px;
+  position: relative;
   text-align: center;
   user-select: none;
 }
+.orgicon b {display: none;}
 .orgnotice {
   display: block;
   font-style: italic;
@@ -68,13 +73,14 @@ input[type="number"],input[type="text"],textarea {
 }
 .orgnotify .orgmessage {margin-bottom: 3px;}
 .orgnotify > div, .orgcalendar > div {
-  background-color: var(--bgColor);
-  border: 2px solid var(--buttonActiveColor);
+  background-color: var(--background);
+  border: 2px solid var(--buttonActive);
   border-radius: 3px;
-  box-shadow: 0 16px 16px -16px var(--buttonActiveColor);
+  box-shadow: 0 16px 16px -16px var(--buttonActive);
   left: 50%;
   line-height: 200%;
   max-height: 100vh;
+  overflow-y: auto;
   padding: 2px;
   position: absolute;
   text-align: center;
@@ -84,32 +90,32 @@ input[type="number"],input[type="text"],textarea {
   z-index: 9;
 }
 .orgnotify input {
-  background-color: var(--textColor);
-  color: var(--bgColor);
+  background-color: var(--text);
+  color: var(--background);
   height: 32px;
   margin: 2px 0;
   padding: 0 8px;
 }
 .orgview .orgicon {float: right; margin-bottom: -2px;}
-.orgtime .orgicon, .orgrepeat .orgicon, .orgwarn .orgicon{background-color: var(--bgColor);}
+.orgtime .orgicon, .orgrepeat .orgicon, .orgwarn .orgicon{background-color: var(--background);}
 .orgnotify .orgicon,
 .orgrepeat div .orgicon,
 .orgwarn div .orgicon {display: block; margin-bottom: 2px;}
 .orgtime, .orgrepeat, .orgwarn {align-items: center; display: flex; padding-right: 2px;}
 .orgtime input {
   appearance: none;
-  background: var(--buttonColor);
+  background: var(--button);
   flex: 1;
   height: 25px;
 }
 .orgtime input::-webkit-slider-thumb{
   appearance: none;
-  background: var(--buttonActiveColor);
+  background: var(--buttonActive);
   height: 40px;
   width: 25px;
 }
 .orgtime input::-moz-range-thumb{
-  background: var(--buttonActiveColor);
+  background: var(--buttonActive);
   height: 40px;
   width: 25px;
 }
@@ -118,7 +124,7 @@ input[type="number"],input[type="text"],textarea {
   flex: 1;
 }
 .orgrepeat a.orgicon, .orgwarn a.orgicon {
-  border: 1px solid var(--dimColor);
+  border: 1px solid var(--dim);
 }
 .orgrepeat a.orgicon:nth-child(2),
 .orgrepeat a.orgicon:nth-child(3){
@@ -132,21 +138,21 @@ input[type="number"],input[type="text"],textarea {
 .orgnotify .grid .orgicon,
 .orgcalendar .grid .orgicon {margin: 0; width: 100%;}
 .orgcalendar button, .orgcalendar input[type="button"], .orgcalendar b {height: 40px;}
-.orgcalendar button {background-color: var(--buttonColor);}
-.orgcalendar input[type="button"]{border: 1px solid var(--dimColor);}
-.orgcalendar .selected{background-color: var(--buttonActiveColor);}
+.orgcalendar button {background-color: var(--button);}
+.orgcalendar input[type="button"]{border: 1px solid var(--dim);}
+.orgcalendar .selected{background-color: var(--buttonActive);}
 .orgmonth .orgicon:nth-child(3){grid-column-start: 3; grid-column-end: 6;}
-.orgdate {color: var(--firstLevelColor);}
-.orgday {color: var(--secondLevelColor);}
-.orgnavbar {background-color: var(--bgColor); width: 100%; flex: 0 0 48px;}
+.orgdate {color: var(--firstLevel);}
+.orgday {color: var(--secondLevel);}
+.orgnavbar {background-color: var(--background); width: 100%; flex: 0 0 48px;}
 .orgnavbar + .orgnavbar {flex: 0 0 40px;}
-.orgnavbar + .orgnavbar .orgicon {height: 40px; line-height: 32px;}
+.orgnavbar + .orgnavbar .orgicon {height: 40px; line-height: 32px; color: var(--text);}
 .orgnavbar:first-child .orgicon {background: none;}
 .orgnavbar + *:not(.orgnavbar)
  {flex: 0 1 auto; overflow-y: auto;}
 .orgnavbar h1 {font-size: 130%; font-weight: 300;}
 .orglist {list-style: none;}
-.orglist li {border-left: 8px solid var(--bgColor);}
+.orglist li {border-left: 8px solid var(--background);}
 .orgfiles li {cursor: pointer; height: 48px;}
 .orgview li, .orgview > pre {
   cursor: pointer;
@@ -160,9 +166,9 @@ input[type="number"],input[type="text"],textarea {
   line-height: 1.8;
   white-space: pre-wrap;
 }
-.nocursor > li {border-left-color: var(--buttonColor) !important;}
-.orglist li:focus {background: var(--nodeHoverColor);}
-.orgfiles li:first-child {border-top: none;}
+.nocursor > li {border-left-color: var(--button) !important;}
+.orglist li:focus {background: var(--headingHover);}
+.orgfiles li:first-child {border-top: 1px solid var(--background);}
 .orgview li:before {
   color: inherit;
   content: "* ";
@@ -172,30 +178,32 @@ input[type="number"],input[type="text"],textarea {
 }
 .orgnotes > li:first-child{min-height: 24px; padding-left: 8px;}
 .orgnotes > li:first-child:before{content: ""}
-.orgfiles input {height: 48px; padding: 0 5px;}
+.orgfiles input {height: 47px; padding: 0 5px 1px;}
 .orgfiles span {padding-left: 5px;}
 .orglist .orgicon:first-child {background: none; height: 36px;}
 .orgview {font-size: 90%;}
 .orgview li.inedit {margin-top: -1px;}
 .orgview .title {padding: 0 0 3px 0;}
-.orgview .body {clear: both; color: var(--textColor);}
-.orgview textarea {color: var(--textColor); padding-top: 3px;}
+.orgview .body {clear: both; color: var(--text);}
+.orgview .body:empty {display: none;}
+.orgview textarea {color: var(--text); padding-top: 3px;}
 .orgsearch span {cursor: pointer;}
-.orgsearchslot {background-color: var(--buttonColor); border-bottom: 1px solid var(--bgColor);}
+.orgsearchslot {background-color: var(--button); border-bottom: 1px solid var(--background);}
+.orgsearchslot:first-child{border-top: 2px solid var(--background);}
 .orgsearchslot span{ padding-left: 5px;}
 .orgsearch li > span {flex: 1;}
-.orgbuffertext{color: var(--dimColor);}
+.orgbuffertext{color: var(--dim);}
 .orgbuffertext textarea {padding-top: 0;}
-.sync0, .sync0 a {color: #0f0;} /* sync: SYNC */
-.sync1, .sync1 a {color: var(--textColor);} /* sync: MODIFIED */
-.sync2, .sync2 a {color: #f00;} /* sync: CONFLICT */
-.sync3, .sync3 a {color: #ff0;} /* sync: INSYNC */
+.sync0, .sync0 a {color: var(--sync);} /* sync: SYNC */
+.sync1, .sync1 a {color: var(--text);} /* sync: MODIFIED */
+.sync2, .sync2 a {color: var(--conflict);} /* sync: CONFLICT */
+.sync3, .sync3 a {color: var(--insync);} /* sync: INSYNC */
 .sync3 span:after{content: "...";}
 
 /* Utils */
 .border {
-  border-bottom: 1px solid var(--buttonColor);
-  border-top: 1px solid var(--buttonColor);
+  border-bottom: 1px solid var(--button);
+  border-top: 1px solid var(--button);
 }
 .cf:after {content: "";clear: both; display: table;}
 .collapsed > :first-child:after {content: "...";}
@@ -203,8 +211,8 @@ input[type="number"],input[type="text"],textarea {
   line-height: 0;
   overflow: hidden;
 }
-#cursor {border-left-color: var(--cursorColor)}
-.inedit, .nocursor .inedit {border-left-color: var(--cursorEditColor) !important;}
+#cursor {border-left-color: var(--cursor)}
+.inedit, .nocursor .inedit {border-left-color: var(--cursorEdit) !important;}
 .flex {align-items: center; display: flex;}
 .flex > *:not(.orgicon) {flex: 1;}
 .hidden {display: none;}
@@ -218,39 +226,59 @@ input[type="number"],input[type="text"],textarea {
 .grid7{grid-template-columns: repeat(7, 1fr); grid-gap: 2px;}
 .grid8{grid-template-columns: repeat(8, 1fr); grid-gap: 2px;}
 .gridrow {display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; grid-gap: 2px;}
-.lvl1 {color: var(--firstLevelColor);}
-.lvl2 {color: var(--secondLevelColor) !important;}
-.lvl0 {color: var(--thirdLevelColor);}
-.orgtodo {color: var(--textColor); font-weight: bold;}
-.orgarchive .title, .orgarchive .orgtodo{color: var(--dimColor);}
+.lvl1 {color: var(--firstLevel);}
+.lvl2 {color: var(--secondLevel) !important;}
+.lvl0 {color: var(--thirdLevel);}
+.orgtodo {color: var(--text); font-weight: bold;}
+.orgarchive .title, .orgarchive .orgtodo{color: var(--dim);}
 .pri {color: #080; font-style: italic;}
 .tag {float: right;}
-.sch,.dl,.cls,.collapsible, .orgdim {color: var(--dimColor);}
-.ts {color: var(--timestampColor);}
+.sch,.dl,.cls,.collapsible, .orgdim {color: var(--dim);}
+.ts {color: var(--timestamp);}
 
-@media (max-width: 321px){ /* for tiny screens */
-  .orgrepeat a.orgicon {font-size: 50%;}
+@media (max-width: 480px){ /* for tiny screens */
+  
 }
 /* stylelint-disable-next-line unit-whitelist */
-@media (min-width: 1025px){
-  .orgicon:hover {background-color: var(--buttonHoverColor);}
+@media (min-width: 481px){
+  body{
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    grid-gap: 2px;
+  }
+  .orgicon:hover {background-color: var(--buttonHover);}
+  .orgicon b {
+    background: var(--background);
+    color: var(--text);
+    display: block;
+    font-size: 12px;
+    left: 2px;
+    line-height: 1.1;
+    padding: 2px;
+    position: absolute;
+    top: 2px;
+  }
   .orgcalendar .orgicon.clock:hover,
   .orgcalendar .orgicon.repeat:hover,
   .orgcalendar .orgicon.warn:hover,
-  .orgcalendar .orgicon.delay:hover {background-color: var(--bgColor);}
+  .orgcalendar .orgicon.delay:hover {
+    background-color: var(--background);
+    cursor: default;
+  }
   .orgtime .orgicon:hover,
   .orgrepeat .orgicon:hover,
   .orgwarn .orgicon:hover{
-    background-color: var(--buttonHoverColor);
+    background-color: var(--buttonHover);
     cursor: pointer;
   }
   .orgrepeat a.orgicon.selected:hover, .orgwarn a.orgicon.selected:hover{
-    background-color: var(--buttonActiveColor);
+    background-color: var(--buttonActive);
   }
   .orglist li:not(.inedit):hover,
-  .orgsearch li:hover button {background: var(--nodeHoverColor);}
-  .orgnotify > div:first-child,
-  .orgcalendar > div:first-child {width: 50%;}
-  input[type="button"]:hover {background-color: var(--buttonHoverColor);}
-  input[type="button"].selected:hover {background-color: var(--buttonActiveColor);}
+  .orgsearch li:hover button {background: var(--headingHover);}
+  .orgnotify > div:first-child {width: 50%;}
+  .orgcalendar > div:first-child {width: 400px;}
+  input[type="button"]:hover {background-color: var(--buttonHover);}
+  input[type="button"].selected:hover {background-color: var(--buttonActive);}
 }
