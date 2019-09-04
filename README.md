@@ -46,10 +46,9 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
     ![y](https://placehold.it/15/ffff00/000000?text=+) : currently synchronizing the file
 
-- **Category Filter :** You can filter by category on Agenda and Search views by clicking on category name.
 - **Text Formatting :** \*bold* /italic/ \_underline_ [[links][...]] are supported
 - **Inactive Timestamps :** Items with inactive timestamps can be shown in agenda
-- **Agenda Sorting :** Search results can be sorted by time, habit, category, priority, todo and alpha (thanks to [thenBy.js](https://github.com/Teun/thenBy.js))
+- **Agenda Sorting :** Search results can be sorted by time, habit, category, priority, todo and alpha
 - **Keyboard Shortcuts :** Similar to emacs org-mode and org-speed-commands (thanks to [jQuery Hotkeys](https://github.com/tzuryby/jquery.hotkeys))
   - **n, p, f, b, u, down, up :** move cursor on headings
   - **t :** set TODO state of the heading
@@ -74,11 +73,11 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
       ```bash
         --type agenda --agenda-span 3 --header "My Agenda"
-        --type tags --filter +prj-DONE --header "My Projects"
+        --type search --filter +prj-DONE --header "My Projects"
         --type search --text "keyword"
       ```
 
-  4. Here each line corresponds to a search section in the custom agenda. There are 3 types of sections: *agenda*, *tags*, *search*. Parameters can be:
+  4. Here each line corresponds to a search section in the custom agenda. There are 2 types of sections: *agenda* and *search*. Parameters can be:
 
       **--agenda-span :** sets how many days the agenda will show starting from today
 
@@ -86,7 +85,21 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
       **--header :** the text will be shown on the menu or section header
 
-      **--text :** sets the search keyword only for search type
+      **--text :** sets the search keyword for text search
+
+- **(NEW) Light Theme:** Light Theme can be selected from Settings Bar
+
+- **(NEW) Timestamp Setting:** With a newly designed date selector, schedule and deadlines can be properly set
+
+- **(NEW) User Drawers:** Displays user drawers on headings properly
+
+- **(NEW) In Buffer Settings:** Together with modifying in-buffer settings text, in-buffer TODO states are supported such as:
+
+      #+TODO: TODO NEXT | DONE
+      #+SEQ_TODO: TODO NEXT | DONE
+      #+TYP_TODO: TODO NEXT | DONE
+
+    more in-buffer settings will be supported soon.
 
 ## Limitations
 

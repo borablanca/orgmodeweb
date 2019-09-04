@@ -20,7 +20,7 @@
         // updatefound is fired if service-worker.js changes.
         registration.onupdatefound = () => {
           const updateNotifyFn = () => $("body").orgNotify({
-            "content": "There is a new version! Click to install",
+            "message": "There is a new version! Install now?",
             "confirm": () => window.location.reload(),
           });
 
@@ -56,7 +56,9 @@
             }
           }
         };
-      }).catch(() => $("body").orgNotify("Error during service worker registration"));
+      }).catch(() => $("body").orgNotify({
+        "message": "Error during service worker registration"
+      }));
   }
   return window.ORG = {
     "route": null,

@@ -122,7 +122,7 @@ gulp.task("copy-sw-scripts", () => gulp.src(
 );
 
 // See http://www.html5rocks.com/en/tutorials/service-worker/introduction/ for an in-depth explanation service workers
-gulp.task("generate-service-worker", gulp.series("copy-sw-scripts"), () => {
+gulp.task("generate-service-worker", gulp.series("copy-sw-scripts", () => {
   const rootDir = "dist";
   const filepath = path.join(rootDir, "service-worker.js");
 
@@ -145,21 +145,20 @@ gulp.task("generate-service-worker", gulp.series("copy-sw-scripts"), () => {
     // glob always use '/'.
     stripPrefix: rootDir + "/"
   });
-});
+}));
 
 // Build production files, the default task
 gulp.task("default", gulp.series(
   "clean",
   "styles",
   "html",
-  "lint",
   "scripts",
   "images",
   "copy",
   "generate-service-worker"
 ), cb => cb());
 
-gulp.task("serve:dist", gulp.series("default"), () =>
+gulp.task("serve:dist", gulp.series("default", (done) => {
   browserSync.create().init({
     notify: false,
     logPrefix: "ORG",
@@ -168,8 +167,9 @@ gulp.task("serve:dist", gulp.series("default"), () =>
     // https: true,
     server: "dist",
     port: 3001
-  })
-);
+  });
+  done();
+}));
 
 gulp.task("reload", (done) => {
   browserSync.reload();
