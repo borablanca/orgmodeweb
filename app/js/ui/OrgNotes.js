@@ -540,7 +540,8 @@
                   node.SCHEDULED = ORG.Parser.parseTimestamp(timeStr);
                   $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
                   events.save(this);
-                }
+                },
+                () => bindKeyboard(this)
               );
             } else {
               this.orgNotify({"message": "Select a heading!"});
@@ -561,7 +562,8 @@
                   node.DEADLINE = ORG.Parser.parseTimestamp(timeStr);
                   $(itemTmpl(node)).data("node", node).replaceAll($li).cursor();
                   events.save(this);
-                }
+                },
+                () => bindKeyboard(this)
               );
             } else {
               this.orgNotify({"message": "Select a heading!"});

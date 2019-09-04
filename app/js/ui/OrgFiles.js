@@ -156,16 +156,22 @@
     "alt+s": "#settings",
     "ctrl+return": () => $orgpage.find(".orgnavbar .add").click(),
     "e": () => events.edit($orgpage.find("#cursor")).find("input[type=text]").textFocus(),
-    "esc": [() => $orgpage.find(".inedit .close a").click(), {
-      "delegate": "input",
-      "fn": (ev) => $(ev.target).siblings(".close").click(),
-    }],
+    "esc": [
+      () => $orgpage.find(".inedit .close a").click(),
+      {
+        "delegate": "input",
+        "fn": (ev) => $(ev.target).siblings(".close").click(),
+      }
+    ],
     "r": () => $orgpage.find("#cursor .orgicon.sync").click(),
     "shift+r": () => $orgpage.find(".orgfiles .orgicon.sync").click(),
-    "return": [() => gotoFile($orgpage), {
-      "delegate": "input",
-      "fn": (ev) => $(ev.target).siblings(".done").click(),
-    }],
+    "return": [
+      () => gotoFile($orgpage),
+      {
+        "delegate": "input",
+        "fn": (ev) => $(ev.target).siblings(".done").click(),
+      }
+    ],
     "tab": () => gotoFile($orgpage),
     "n": ORG.Keyboard.common.cursorDown,
     "down": ORG.Keyboard.common.cursorDown,
@@ -204,17 +210,20 @@
           "type": ICONTYPE.ICON,
           "fn": () => this.orgNotify({
             "grid": "grid",
-            "items": [{
-              "name": "Local File",
-              "fn": () => {
-                const $orgFiles = this.find(".orgfiles");
-                $orgFiles.find(".inedit .orgicon.close").click();
-                $(editTmpl()).cursor().appendTo($orgFiles).find("input[type=text]").focus();
+            "items": [
+              {
+                "name": "Local File",
+                "fn": () => {
+                  const $orgFiles = this.find(".orgfiles");
+                  $orgFiles.find(".inedit .orgicon.close").click();
+                  $(editTmpl()).cursor().appendTo($orgFiles).find("input[type=text]").focus();
+                }
+              },
+              {
+                "name": "From Dropbox",
+                "fn": "#dbox#"
               }
-            }, {
-              "name": "From Dropbox",
-              "fn": "#dbox#"
-            }],
+            ],
             "rebind": () => bindKeyboard(this)
           })
         },
@@ -230,7 +239,8 @@
           {
             "Agenda": {"type": ICONTYPE.TEXT, "fn": "#agenda#a"},
             "Match": {
-              "type": ICONTYPE.TEXT, "fn": () => {
+              "type": ICONTYPE.TEXT,
+              "fn": () => {
                 this.orgNotify({
                   "message": "Match Query:",
                   "prompt": 1,
@@ -240,7 +250,8 @@
               }
             },
             "Search": {
-              "type": ICONTYPE.TEXT, "fn": () => {
+              "type": ICONTYPE.TEXT,
+              "fn": () => {
                 this.orgNotify({
                   "message": "Search:",
                   "prompt": 1,

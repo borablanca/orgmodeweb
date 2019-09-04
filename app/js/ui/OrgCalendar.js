@@ -43,11 +43,18 @@ ${[...Array(ndays < 31 ? 6 : 5).keys()].map(() => "<b>&nbsp;</b>").join("")}
     TYPE
   };
 
-  $.fn.orgCalendar = function (type = TYPE.SCH, ts = {}, successFn) { // eslint-disable-line
+  $.fn.orgCalendar = function (type = TYPE.SCH, ts = {}, successFn, rebindFn) { // eslint-disable-line
     const selectedDate = ts && ts.ml ? new Date(ts.ml) : new Date();
     const settings = ORG.Settings.getSettingsObj();
     const dayNames = ORG.Settings.getDayNames(settings);
     const monthNames = ORG.Settings.getMonthNames(settings);
+
+    const removeFn = ($calendar) => {
+      $calendar.off().fadeOut(150, () => $calendar.remove());
+      if (rebindFn) rebindFn();
+      return false;
+    };
+
     this.find(".orgcalendar").off().remove(); // remove any previous calendar
 
     const $calendar = $(`<div class="orgcalendar">
@@ -138,7 +145,7 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
       })
       .on("click", function (ev) { // eslint-disable-line max-statements
         if (ev.target === this) {
-          return $calendar.off().fadeOut(150, () => $calendar.remove());
+          return removeFn($calendar);
         }
         const $orgicon = $(ev.target).closest(".orgicon");
 
@@ -151,7 +158,7 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
             } else if (confirmIconType === "delete") {
               successFn();
             }
-            return $calendar.off().fadeOut(150, () => $calendar.remove());
+            return removeFn($calendar);
           } else if ($orgicon.hasClass("orgrepeattype")) {
             if ($orgicon.hasClass("selected")) {
               $orgicon.removeClass("selected");
@@ -257,6 +264,15 @@ ${textIcon("y", {"clss": "orgwarnrange"})}
     }
 
     updateDateStr($calendar).appendTo(this).fadeIn(150);
+
+    ORG.Keyboard.bind({
+      "esc": () => removeFn($calendar),
+      "return": () => {
+        successFn($calendar.find(".orgdate").text());
+        return removeFn($calendar);
+      }
+    });
+
     return this;
   };
 })();

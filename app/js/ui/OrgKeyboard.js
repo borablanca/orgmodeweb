@@ -41,11 +41,23 @@
       "cursorDown": () => cursorFn(
         ($c) => $c.nextAll(":visible").first()
       ),
-      "cursorBackward": () => cursorFn(
-        ($c) => $c.prevAll(`[data-lvl=${$c.data("lvl")}]:visible`).first()
-      ),
       "cursorForward": () => cursorFn(
-        ($c) => $c.nextAll(`[data-lvl=${$c.data("lvl")}]:visible`).first()
+        ($c) => {
+          const lvl = $c.data("lvl");
+          let $next = $c.next();
+          let nlvl;
+          while ((nlvl = $next.data("lvl")) > lvl) $next = $next.next();
+          return nlvl >= lvl ? $next : [];
+        }
+      ),
+      "cursorBackward": () => cursorFn(
+        ($c) => {
+          const lvl = $c.data("lvl");
+          let $prev = $c.prev();
+          let nlvl;
+          while ((nlvl = $prev.data("lvl")) > lvl) $prev = $prev.prev();
+          return nlvl >= lvl ? $prev : [];
+        }
       ),
       "cursorFirst": () => cursorFn(
         ($c) => $c.prevAll(":visible").last()
