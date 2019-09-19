@@ -46,6 +46,15 @@
       el.innerText = el.textContent = text; // eslint-disable-line no-multi-assign
       return el.innerHTML;
     },
+    "timeStr2Ml": (timeStr) => {
+      if (timeStr === "<today>") return new Date().setHours(0, 0, 0, 0);
+      if (timeStr === "<tomorrow>") return new Date().setHours(0, 0, 0, 0) + ORG.Utils.DAY;
+      if (timeStr === "<now>") return new Date().getTime();
+      const timeStamp = ORG.Parser.parseTimestamp(timeStr);
+      if (timeStamp) return timeStamp.ml;
+      return new Date().setHours(0, 0, 0, 0);
+    },
+    "DAY": 86400000,
     "singleLine": (strs, ...vals) => {
       let text = "";
       const re = /^\s+/gm;

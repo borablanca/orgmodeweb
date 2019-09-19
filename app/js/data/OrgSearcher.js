@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 (() => {
   const parseTimestamp = ORG.Parser.parseTimestamp;
-  const DAY = 86400000; // one day in miliseconds
+  const DAY = ORG.Utils.DAY; // one day in miliseconds
   const orgRepeaterSplitRE = /([+-]?)([0-9]+)([hdwmy])/;
   const orgEscapeRE = /[[\]{}()*?.,\\^$]/g;
   const orgTagSplitGRE = /(?:(\+|-|)([^+-\s]+))/g;
@@ -29,6 +29,7 @@
   };
 
   const timeStr2Ml = (timeStr, ml) => {
+    if ($.isNumeric(timeStr)) return timeStr;
     if (timeStr === "<today>") return new Date().setHours(0, 0, 0, 0);
     if (timeStr === "<tomorrow>") return new Date().setHours(0, 0, 0, 0) + DAY;
     if (timeStr === "<now>") return new Date().getTime();
@@ -278,7 +279,7 @@
           } else if (sml >= (curStmp.w ? timeStr2Ml(curStmp.w, ml) : ml) && // slot is later than node (plus delay if exist)
             (!(nodeProps && nodeProps.STYLE === "habit") ||
               slot.today || // if habit, should be today or setting show all days
-              !(slot["show-habits-only-for-today"] || globOpts["show-habits-only-for-today"]))) {
+              !+(slot["show-habits-only-for-today"] || globOpts["show-habits-only-for-today"]))) {
             if (curStmp.r && curStmp.rmin) {  // eslint-disable-line max-depth
               // repeat exist
               fits.offset = repeatOffset(curStmp.rmin, ml, sml);
