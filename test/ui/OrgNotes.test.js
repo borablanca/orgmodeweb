@@ -6,7 +6,12 @@ QUnit.module("OrgNotes Tests", (hooks) => {
     "",
     ORG.Parser.parseFile("file1", text, ORG.defaults)
   );
+  hooks.before(() => {
+    localStorage.clear();
+    ORG.Utils.isMobile = true;
+  });
   hooks.afterEach(() => localStorage.clear());
+  hooks.after(() => ORG.Utils.isMobile = false);
 
   QUnit.test("file with empty nodes should display notice", (assert) => {
     const file = createFile("emptyFile", "");

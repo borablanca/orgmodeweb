@@ -119,6 +119,23 @@
     }).on("click", ".orglink", (ev) => ev.preventDefault());
   };
 
+  const createSearchList = (plan, settings, uiSettings) => `<ul class="orgsearch orglist${ORG.Utils.isMobile ? " nocursor" : ""}">
+    ${search(plan, ORG.Store, settings)
+    .map((slot) => ORG.Sorter.sort(
+      slot,
+      slot["sorting-strategy"] || settings["agenda-sorting-strategy"])
+    ).map((slot) => itemTmpl[slot.type](slot, uiSettings)).join("")}
+    </ul>`;
+
+  const listUpdateFn = (orgSearch, settings, uiSettings, fn) => {
+    const plan = orgSearch.data("plan").map((slot) => slot.type === "agenda" ? fn(slot) : slot);
+    orgSearch
+      .data("plan", plan)
+      .find(".orgsearch")
+      .replaceWith(createSearchList(plan, settings, uiSettings)).end()
+      .find("li:first-child").cursor();
+  };
+
   $.fn.orgSearch = function (searchPlan) {
     const settings = ORG.Settings.getSettingsObj();
     const uiSettings = {
@@ -128,12 +145,7 @@
       "months": ORG.Settings.getMonthNames(),
       "todoKeywords": ORG.Settings.getTodoKeywords(settings, {}),
     };
-    const nodes = search(searchPlan, ORG.Store, settings)
-      .map((slot) => ORG.Sorter.sort(
-        slot,
-        slot["sorting-strategy"] || settings["agenda-sorting-strategy"])
-      );
-    const $search = init(this.removeData().off().empty().append(
+    const $search = init(this.removeData().off().empty().data("plan", searchPlan).append(
       $(document.createElement("div")).orgNavbar({
         "org": {"type": ICONTYPE.ICON, "fn": "#"},
         "back": {"type": ICONTYPE.ICON, "fn": () => history.back()},
@@ -149,9 +161,45 @@
           }
         }
       }).addClass("flex"),
-      `<ul class="orgsearch orglist${ORG.Utils.isMobile ? " nocursor" : ""}">
-      ${nodes.map((slot) => itemTmpl[slot.type](slot, uiSettings)).join("")}
-      </ul>`,
+      searchPlan.map((slot) => slot.type).includes("agenda") ?
+        $(document.createElement("div")).orgNavbar({
+          "<": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => listUpdateFn(this, settings, uiSettings, (slot) => {
+              slot["start-date"] = ORG.Utils.addToTimeStr(slot["start-date"], `<-${slot["agenda-span"]}d`);
+              return slot;
+            })
+          },
+          "TODAY": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => listUpdateFn(this, settings, uiSettings, (slot) => {
+              slot["start-date"] = "<today>";
+              return slot;
+            })
+          },
+          "DAY": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => listUpdateFn(this, settings, uiSettings, (slot) => {
+              slot["agenda-span"] = 1;
+              return slot;
+            })
+          },
+          "WEEK": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => listUpdateFn(this, settings, uiSettings, (slot) => {
+              slot["agenda-span"] = 7;
+              return slot;
+            })
+          },
+          ">": {
+            "type": ICONTYPE.TEXT,
+            "fn": () => listUpdateFn(this, settings, uiSettings, (slot) => {
+              slot["start-date"] = ORG.Utils.addToTimeStr(slot["start-date"], `<+${slot["agenda-span"]}d`);
+              return slot;
+            })
+          }
+        }).addClass("gridrow") : "",
+      createSearchList(searchPlan, settings, uiSettings),
       ORG.Settings.getStyles()
     ).find("li:first-child").cursor().end());
 

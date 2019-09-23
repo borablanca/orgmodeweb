@@ -197,8 +197,14 @@
 
       if (curPlan.type === "agenda") {
         const span = !isNaN(curPlan["agenda-span"]) && curPlan["agenda-span"] || !isNaN(opts["agenda-span"]) && opts["agenda-span"] || 7;
+        curPlan["agenda-span"] = span;
+        if (!curPlan["start-date"]) curPlan["start-date"] = "<today>";
 
-        for (let agendaSlot = 0, startMl = curPlan["start-date"] && timeStr2Ml(curPlan["start-date"]) || todayMl; agendaSlot++ < span; startMl += DAY) {
+        for (
+          let agendaSlot = 0, startMl = timeStr2Ml(curPlan["start-date"]) || todayMl;
+          agendaSlot++ < span;
+          startMl += DAY
+        ) {
           slots.push(createSlot(curPlan, startMl));
         }
       } else {

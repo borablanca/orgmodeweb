@@ -1,5 +1,7 @@
 /* eslint-disable no-param-reassign */
 (() => {
+  const orgRepeaterSplitRE = /([+-]?)([0-9]+)([hdwmy])/;
+
   const replace = (text, matches, tag) => {
     for (const idx in matches) {
       const next = matches[idx].trim();
@@ -53,6 +55,22 @@
       const timeStamp = ORG.Parser.parseTimestamp(timeStr);
       if (timeStamp) return timeStamp.ml;
       return new Date().setHours(0, 0, 0, 0);
+    },
+    "addToTimeStr": (timeStr, addTimeStr) => {
+      const ml = ORG.Utils.timeStr2Ml(timeStr);
+      const match = addTimeStr.match(orgRepeaterSplitRE);
+      if (!match) return timeStr;
+      const writeTimestamp = ORG.Writer.writeTimestamp;
+      const amount = match[2] * +(match[1] + 1);
+      const date = new Date(ml);
+
+      switch (match[3]) {
+      case "d": return writeTimestamp({"ml": ml + ORG.Utils.DAY * amount});
+      case "w": return writeTimestamp({"ml": ml + ORG.Utils.DAY * amount * 7});
+      case "m": return writeTimestamp({"ml": date.setMonth(date.getMonth() + amount)});
+      case "y": return writeTimestamp({"ml": date.setFullYear(date.getFullYear() + amount)});
+      }
+      return timeStr; // return timeStr for hour (h) or anything unrelated
     },
     "DAY": 86400000,
     "singleLine": (strs, ...vals) => {

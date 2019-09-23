@@ -6,8 +6,8 @@
     let tsStr =
       (inactive ? "[" : "<") + year + "-" +
       ("0" + (date.getMonth() + 1)).slice(-2) + "-" +
-      ("0" + date.getDate()).slice(-2) + " " +
-      days[date.getDay()];
+      ("0" + date.getDate()).slice(-2) +
+      (days ? " " + days[date.getDay()] : "");
 
     if (orgTimestamp.hs) {
       tsStr += " " + orgTimestamp.hs;
