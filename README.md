@@ -113,8 +113,8 @@ The editing idea is inspired from [Jupyter Notebooks](https://jupyter.org/), whe
 
 Some features I am planning to implement:
 
-- An action toolbar for fast setting of todo, priority, tag, schedule and deadline of headings
-- Move forward and backward days on agenda view
+- DONE ~~An action toolbar for fast setting of todo, priority, tag, schedule and deadline of headings~~
+- DONE ~~Move forward and backward days on agenda view~~
 - Capturing notes
 - Logging of state changes as in org-mode
 - Clocking as in org-mode
